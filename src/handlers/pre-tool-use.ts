@@ -1,16 +1,15 @@
 import type { PreToolUseInput, PreToolUseResponse } from "../types";
 import { matchTool } from "../utils/matcher";
 import { parseBashCommand } from "../utils/bash-parser";
+import { tryCatch } from "../utils/result";
 
-// 設定の型定義
-export interface PreToolUseConfig {
-  preToolUse?: Array<{
-    matcher?: string;
-    command?: string;
-    args?: string;
-    decision: "block" | "approve";
-    reason: string;
-  }>;
+// ルールの型定義
+export interface PreToolUseRule {
+  matcher?: string;
+  command?: string;
+  args?: string;
+  decision: "block" | "approve";
+  reason: string;
 }
 
 interface MatchedRule {
@@ -20,15 +19,15 @@ interface MatchedRule {
 
 export const handlePreToolUse = async (
   input: PreToolUseInput,
-  config?: PreToolUseConfig
+  rules?: PreToolUseRule[]
 ): Promise<PreToolUseResponse> => {
   // 設定がない場合は空のレスポンスを返す
-  if (!config?.preToolUse || config.preToolUse.length === 0) {
+  if (!rules || rules.length === 0) {
     return {};
   }
 
   // ツール名でマッチするルールをフィルタリング
-  const matchingRules = config.preToolUse.filter(rule => 
+  const matchingRules = rules.filter(rule => 
     matchTool(rule.matcher, input.tool_name)
   );
 
@@ -36,98 +35,130 @@ export const handlePreToolUse = async (
     return {};
   }
 
-  // Bashツールの場合はコマンド解析
+  // Bashツールの場合
   if (input.tool_name === "Bash") {
-    const bashCommand = input.tool_input.command as string;
-    if (!bashCommand) {
-      return {};
-    }
-
-    const parsedCommands = parseBashCommand(bashCommand);
-    const matchedRules: MatchedRule[] = [];
-
-    // 各コマンドに対してルールをチェック
-    for (const parsed of parsedCommands) {
-      // まずデフォルト設定（argsなし）を収集
-      const defaultRules = new Map<string, MatchedRule>();
-      
-      for (const rule of matchingRules) {
-        if (rule.command === parsed.command && !rule.args) {
-          defaultRules.set(rule.command, {
-            decision: rule.decision,
-            reason: rule.reason
-          });
-        }
-      }
-
-      // デフォルト設定をmatchedRulesに追加
-      defaultRules.forEach(rule => {
-        matchedRules.push(rule);
-      });
-
-      // 次に特定条件（argsあり）をチェック
-      for (const rule of matchingRules) {
-        if (rule.command === parsed.command && rule.args) {
-          try {
-            const argsRegex = new RegExp(rule.args);
-            if (argsRegex.test(parsed.args)) {
-              matchedRules.push({
-                decision: rule.decision,
-                reason: rule.reason
-              });
-            }
-          } catch {
-            // 無効な正規表現の場合は文字列として比較
-            if (parsed.args.includes(rule.args)) {
-              matchedRules.push({
-                decision: rule.decision,
-                reason: rule.reason
-              });
-            }
-          }
-        }
-      }
-    }
-
-    // matchedRulesから最も制限的なdecisionを選択
-    return selectMostRestrictiveRule(matchedRules);
+    return handleBashTool(input, matchingRules);
   }
 
   // Bash以外のツールの場合
+  return handleOtherTools(input, matchingRules);
+};
+
+function handleBashTool(
+  input: PreToolUseInput,
+  matchingRules: PreToolUseRule[]
+): PreToolUseResponse {
+  const bashCommand = input.tool_input.command as string;
+  if (!bashCommand) {
+    return {};
+  }
+
+  const parsedCommands = parseBashCommand(bashCommand);
   const matchedRules: MatchedRule[] = [];
+
+  // 各コマンドに対してルールをチェック
+  parsedCommands.forEach(parsed => {
+    // デフォルト設定（argsなし）を収集
+    const defaultRules = collectDefaultRules(matchingRules, parsed.command);
+    matchedRules.push(...defaultRules);
+
+    // 特定条件（argsあり）をチェック
+    const specificRules = collectSpecificRules(matchingRules, parsed);
+    matchedRules.push(...specificRules);
+  });
+
+  return selectMostRestrictiveRule(matchedRules);
+}
+
+function collectDefaultRules(
+  rules: PreToolUseRule[],
+  command: string
+): MatchedRule[] {
+  if (!rules) return [];
   
-  // argsパターンでチェック（tool_inputの各値に対して）
-  for (const rule of matchingRules) {
-    if (rule.args) { // Bash以外ではcommandは無視（あっても処理する）
-      // tool_inputの各値を文字列に変換してパターンマッチ
-      const inputValues = Object.values(input.tool_input).map(v => String(v));
-      
-      for (const value of inputValues) {
-        try {
-          const argsRegex = new RegExp(rule.args);
-          if (argsRegex.test(value)) {
-            matchedRules.push({
-              decision: rule.decision,
-              reason: rule.reason
-            });
-            break; // 一つでもマッチしたらこのルールは適用
-          }
-        } catch {
-          // 無効な正規表現の場合は文字列として部分一致で比較
-          if (value.includes(rule.args)) {
-            matchedRules.push({
-              decision: rule.decision,
-              reason: rule.reason
-            });
-            break;
-          }
-        }
+  const defaultRules = new Map<string, MatchedRule>();
+  
+  rules.forEach(rule => {
+    if (rule.command === command && !rule.args) {
+      defaultRules.set(rule.command, {
+        decision: rule.decision,
+        reason: rule.reason
+      });
+    }
+  });
+
+  return Array.from(defaultRules.values());
+}
+
+function collectSpecificRules(
+  rules: PreToolUseRule[],
+  parsed: { command: string; args: string }
+): MatchedRule[] {
+  if (!rules) return [];
+  
+  const matchedRules: MatchedRule[] = [];
+
+  rules.forEach(rule => {
+    if (rule.command !== parsed.command || !rule.args) return;
+    
+    const args = rule.args;
+    const regexResult = tryCatch(() => new RegExp(args));
+    
+    if (regexResult.value) {
+      if (regexResult.value.test(parsed.args)) {
+        matchedRules.push({
+          decision: rule.decision,
+          reason: rule.reason
+        });
+      }
+    } else {
+      // 無効な正規表現の場合は文字列として比較
+      if (parsed.args.includes(args)) {
+        matchedRules.push({
+          decision: rule.decision,
+          reason: rule.reason
+        });
       }
     }
-  }
+  });
+
+  return matchedRules;
+}
+
+function handleOtherTools(
+  input: PreToolUseInput,
+  matchingRules: PreToolUseRule[]
+): PreToolUseResponse {
+  if (!matchingRules) return {};
   
+  const matchedRules: MatchedRule[] = [];
+  const inputValues = Object.values(input.tool_input).map(v => String(v));
+
+  matchingRules.forEach(rule => {
+    if (!rule.args) return;
+    
+    const args = rule.args;
+    const matched = inputValues.some(value => {
+      const regexResult = tryCatch(() => new RegExp(args));
+      
+      if (regexResult.value) {
+        return regexResult.value.test(value);
+      } else {
+        // 無効な正規表現の場合は文字列として部分一致で比較
+        return value.includes(args);
+      }
+    });
+
+    if (matched) {
+      matchedRules.push({
+        decision: rule.decision,
+        reason: rule.reason
+      });
+    }
+  });
+
   return selectMostRestrictiveRule(matchedRules);
-};
+}
 
 function selectMostRestrictiveRule(rules: MatchedRule[]): PreToolUseResponse {
   if (rules.length === 0) {
