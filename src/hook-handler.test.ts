@@ -32,7 +32,7 @@ describe("hookタイプの判別", () => {
 
     // handlePreToolUseをスパイ
     const spy = spyOn(handlers, "handlePreToolUse");
-    spy.mockResolvedValue({});
+    spy.mockResolvedValue({}); // PreToolUseResponseの空オブジェクト
 
     // Act
     await processHook(input);
@@ -60,7 +60,7 @@ describe("hookタイプの判別", () => {
 
     // handlePostToolUseをスパイ
     const spy = spyOn(handlers, "handlePostToolUse");
-    spy.mockResolvedValue({});
+    spy.mockResolvedValue({}); // PostToolUseResponseの空オブジェクト
 
     // Act
     await processHook(input);
@@ -81,7 +81,7 @@ describe("hookタイプの判別", () => {
 
     // handleNotificationをスパイ
     const spy = spyOn(handlers, "handleNotification");
-    spy.mockResolvedValue({});
+    spy.mockResolvedValue({}); // NotificationResponseの空オブジェクト
 
     // Act
     await processHook(input);
@@ -102,7 +102,7 @@ describe("hookタイプの判別", () => {
 
     // handleStopをスパイ
     const spy = spyOn(handlers, "handleStop");
-    spy.mockResolvedValue({});
+    spy.mockResolvedValue({ reason: "" }); // StopResponseはreasonが必須
 
     // Act
     await processHook(input);
@@ -122,7 +122,7 @@ describe("hookタイプの判別", () => {
 
     // handleSubagentStopをスパイ
     const spy = spyOn(handlers, "handleSubagentStop");
-    spy.mockResolvedValue({});
+    spy.mockResolvedValue({ reason: "" }); // SubagentStopResponseはreasonが必須
 
     // Act
     await processHook(input);
@@ -142,7 +142,7 @@ describe("hookタイプの判別", () => {
 
     // handlePreCompactをスパイ
     const spy = spyOn(handlers, "handlePreCompact");
-    spy.mockResolvedValue({});
+    spy.mockResolvedValue({}); // PreCompactResponseの空オブジェクト
 
     // Act
     await processHook(input);

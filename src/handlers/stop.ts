@@ -1,5 +1,5 @@
-import type { StopInput, HookResponse } from "../types";
+import type { StopInput, StopResponse } from "../types";
 
-export const handleStop = async (input: StopInput): Promise<HookResponse> => {
+export const handleStop = async (input: StopInput): Promise<StopResponse> => {
   throw new Error("Not implemented");
 };

@@ -1,5 +1,5 @@
-import type { PreCompactInput, HookResponse } from "../types";
+import type { PreCompactInput, PreCompactResponse } from "../types";
 
-export const handlePreCompact = async (input: PreCompactInput): Promise<HookResponse> => {
+export const handlePreCompact = async (input: PreCompactInput): Promise<PreCompactResponse> => {
   throw new Error("Not implemented");
 };

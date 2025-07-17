@@ -39,8 +39,38 @@ export interface PreCompactInput extends BaseHookInput {
 export type HookInput = PreToolUseInput | PostToolUseInput | NotificationInput | StopInput | SubagentStopInput | PreCompactInput;
 
 // Hook応答の型定義
-export interface HookResponse {
-  action?: "allow" | "block";
-  message?: string;
-  modifications?: Record<string, any>;
+export interface BaseHookResponse {
+  continue?: boolean;
+  stopReason?: string;
+  suppressOutput?: boolean;
 }
+
+export interface PreToolUseResponse extends BaseHookResponse {
+  decision?: "approve" | "block";
+  reason?: string;
+}
+
+export interface PostToolUseResponse extends BaseHookResponse {
+  decision?: "block";
+  reason?: string;
+}
+
+export interface StopResponse extends BaseHookResponse {
+  decision?: "block";
+  reason: string; // blockの場合は必須
+}
+
+export interface SubagentStopResponse extends BaseHookResponse {
+  decision?: "block";
+  reason: string; // blockの場合は必須
+}
+
+export interface NotificationResponse extends BaseHookResponse {
+  // 特別なdecisionフィールドはない
+}
+
+export interface PreCompactResponse extends BaseHookResponse {
+  // 特別なdecisionフィールドはない
+}
+
+export type HookResponse = PreToolUseResponse | PostToolUseResponse | StopResponse | SubagentStopResponse | NotificationResponse | PreCompactResponse;

@@ -1,5 +1,5 @@
-import type { PostToolUseInput, HookResponse } from "../types";
+import type { PostToolUseInput, PostToolUseResponse } from "../types";
 
-export const handlePostToolUse = async (input: PostToolUseInput): Promise<HookResponse> => {
+export const handlePostToolUse = async (input: PostToolUseInput): Promise<PostToolUseResponse> => {
   throw new Error("Not implemented");
 };

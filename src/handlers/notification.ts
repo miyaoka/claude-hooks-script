@@ -1,5 +1,5 @@
-import type { NotificationInput, HookResponse } from "../types";
+import type { NotificationInput, NotificationResponse } from "../types";
 
-export const handleNotification = async (input: NotificationInput): Promise<HookResponse> => {
+export const handleNotification = async (input: NotificationInput): Promise<NotificationResponse> => {
   throw new Error("Not implemented");
 };
