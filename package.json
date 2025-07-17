@@ -1,5 +1,5 @@
 {
-  "name": "claude-hooks",
+  "name": "@miyaoka/claude-hooks",
   "version": "0.1.0",
   "description": "Hook scripts for Claude Code",
   "module": "src/index.ts",

@@ -3,7 +3,6 @@ import {
   handlePreToolUse,
   handlePostToolUse,
   handleNotification,
-  handleStop,
   handleSubagentStop,
   handlePreCompact
 } from "./handlers";
@@ -18,7 +17,7 @@ export const processHook = async (input: HookInput): Promise<HookResponse> => {
     case "Notification":
       return handleNotification(input);
     case "Stop":
-      return handleStop(input);
+      return {};
     case "SubagentStop":
       return handleSubagentStop(input);
     case "PreCompact":
