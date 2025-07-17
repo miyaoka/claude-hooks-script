@@ -1,10 +1,17 @@
 {
-  "name": "claude-hook-script",
-  "module": "index.ts",
+  "name": "claude-hooks",
+  "version": "0.1.0",
+  "description": "Hook scripts for Claude Code",
+  "module": "src/index.ts",
   "type": "module",
-  "private": true,
+  "bin": {
+    "claude-hooks": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "bun-types": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"

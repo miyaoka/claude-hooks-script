@@ -1,0 +1,44 @@
+{
+  "hooks": {
+    "pre_tool_use": [
+      {
+        "name": "Security Check",
+        "script": "claude-hooks",
+        "matchers": [
+          {
+            "tool": "Bash"
+          }
+        ],
+        "config": {
+          "dangerous_commands": ["rm -rf", "dd", "format"],
+          "require_confirmation": true
+        }
+      }
+    ],
+    "post_tool_use": [
+      {
+        "name": "Log Tool Usage",
+        "script": "claude-hooks",
+        "matchers": [
+          {
+            "tool": "*"
+          }
+        ],
+        "config": {
+          "log_file": "~/.claude/tool-usage.log"
+        }
+      }
+    ],
+    "notification": [
+      {
+        "name": "Error Handler",
+        "script": "claude-hooks",
+        "matchers": [
+          {
+            "notification_type": "error"
+          }
+        ]
+      }
+    ]
+  }
+}
