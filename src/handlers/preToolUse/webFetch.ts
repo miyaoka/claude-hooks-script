@@ -3,7 +3,7 @@ import type {
   WebFetchPreToolUseInput,
 } from "../../types/hook";
 import { tryCatch } from "../../utils/result";
-import type { MatchedRule, PreToolUseRule } from "../preToolUse";
+import type { MatchedRule, WebFetchRule } from "../preToolUse";
 import { selectMostRestrictiveRule } from "./utils";
 
 /**
@@ -17,17 +17,14 @@ import { selectMostRestrictiveRule } from "./utils";
  */
 export function handleWebFetchTool(
   input: WebFetchPreToolUseInput,
-  rules: PreToolUseRule[],
+  rules: WebFetchRule[],
 ): PreToolUseResponse {
-  // WebFetch用のルールのみフィルタリング
-  const webFetchRules = rules.filter((rule) => rule.matcher === "WebFetch");
-
-  if (webFetchRules.length === 0) {
+  if (rules.length === 0) {
     return {};
   }
 
   // 1. ルールの正規化（同じdomainを持つルールは後のもので上書き）
-  const normalizedRules = normalizeWebFetchRules(webFetchRules);
+  const normalizedRules = normalizeWebFetchRules(rules);
 
   // tool_inputからURLを取得
   const url = input.tool_input.url;
@@ -65,9 +62,9 @@ export function handleWebFetchTool(
  * WebFetch用のルール正規化
  * 同じdomainを持つルールは最後のもので上書き
  */
-function normalizeWebFetchRules(rules: PreToolUseRule[]): PreToolUseRule[] {
+function normalizeWebFetchRules(rules: WebFetchRule[]): WebFetchRule[] {
   const seen = new Set<string>();
-  const result: PreToolUseRule[] = [];
+  const result: WebFetchRule[] = [];
 
   // 重複するキーは配列の後方のものを優先するため、逆順に走査して初出のもののみ採用
   for (let i = rules.length - 1; i >= 0; i--) {
@@ -90,7 +87,7 @@ function normalizeWebFetchRules(rules: PreToolUseRule[]): PreToolUseRule[] {
  * デフォルトルール（domainなし）のマッチング
  * domainを持たないルールは最後のもので上書きされる
  */
-function matchDefaultRules(rules: PreToolUseRule[]): MatchedRule[] {
+function matchDefaultRules(rules: WebFetchRule[]): MatchedRule[] {
   if (!rules) return [];
 
   const defaultRules = new Map<string, MatchedRule>();
@@ -112,7 +109,7 @@ function matchDefaultRules(rules: PreToolUseRule[]): MatchedRule[] {
  * domainパターンにマッチするすべてのルールを返す
  */
 function matchSpecificRules(
-  rules: PreToolUseRule[],
+  rules: WebFetchRule[],
   hostname: string,
 ): MatchedRule[] {
   if (!rules) return [];

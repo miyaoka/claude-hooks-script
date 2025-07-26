@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { WebFetchPreToolUseInput } from "../../types/hook";
-import type { PreToolUseRule } from "../preToolUse";
+import type { WebFetchRule } from "../preToolUse";
 import { handleWebFetchTool } from "./webFetch";
 
 describe("handleWebFetchTool", () => {
@@ -22,18 +22,9 @@ describe("handleWebFetchTool", () => {
     expect(result).toEqual({});
   });
 
-  it("WebFetch以外のルールは無視する", () => {
-    const input = createInput("https://example.com");
-    const rules: PreToolUseRule[] = [
-      { matcher: "Bash", decision: "block", reason: "Bash rule" },
-    ];
-    const result = handleWebFetchTool(input, rules);
-    expect(result).toEqual({});
-  });
-
   it("デフォルトでapproveする", () => {
     const input = createInput("https://example.com");
-    const rules: PreToolUseRule[] = [
+    const rules: WebFetchRule[] = [
       { matcher: "WebFetch", decision: "approve", reason: "基本的にfetch ok" },
     ];
     const result = handleWebFetchTool(input, rules);
@@ -45,7 +36,7 @@ describe("handleWebFetchTool", () => {
 
   it("特定のドメインをblockする", () => {
     const input = createInput("https://www.google.com/search");
-    const rules: PreToolUseRule[] = [
+    const rules: WebFetchRule[] = [
       { matcher: "WebFetch", decision: "approve", reason: "基本的にfetch ok" },
       {
         matcher: "WebFetch",
@@ -63,7 +54,7 @@ describe("handleWebFetchTool", () => {
 
   it("正規表現でドメインをマッチする", () => {
     const input = createInput("https://sub.example.com/page");
-    const rules: PreToolUseRule[] = [
+    const rules: WebFetchRule[] = [
       {
         matcher: "WebFetch",
         decision: "block",
@@ -80,7 +71,7 @@ describe("handleWebFetchTool", () => {
 
   it("後に定義されたルールが優先される", () => {
     const input = createInput("https://www.google.com");
-    const rules: PreToolUseRule[] = [
+    const rules: WebFetchRule[] = [
       {
         matcher: "WebFetch",
         decision: "block",
@@ -103,7 +94,7 @@ describe("handleWebFetchTool", () => {
 
   it("複数のルールがマッチした場合はblockが優先される", () => {
     const input = createInput("https://example.com");
-    const rules: PreToolUseRule[] = [
+    const rules: WebFetchRule[] = [
       { matcher: "WebFetch", decision: "approve", reason: "デフォルトapprove" },
       {
         matcher: "WebFetch",
@@ -121,7 +112,7 @@ describe("handleWebFetchTool", () => {
 
   it("無効なURLの場合は空のレスポンスを返す", () => {
     const input = createInput("not-a-valid-url");
-    const rules: PreToolUseRule[] = [
+    const rules: WebFetchRule[] = [
       { matcher: "WebFetch", decision: "block", reason: "全てblock" },
     ];
     const result = handleWebFetchTool(input, rules);
@@ -130,9 +121,7 @@ describe("handleWebFetchTool", () => {
 
   it("decisionがundefinedの場合はreasonのみ返す", () => {
     const input = createInput("https://example.com");
-    const rules: PreToolUseRule[] = [
-      { matcher: "WebFetch", reason: "理由のみ" },
-    ];
+    const rules: WebFetchRule[] = [{ matcher: "WebFetch", reason: "理由のみ" }];
     const result = handleWebFetchTool(input, rules);
     expect(result).toEqual({
       reason: "理由のみ",

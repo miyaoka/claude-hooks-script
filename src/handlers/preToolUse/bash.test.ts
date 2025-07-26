@@ -222,30 +222,6 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
   });
 
   describe("マッチしない場合", () => {
-    it("ツール名がマッチしない場合は空のオブジェクトを返す", async () => {
-      const rules: PreToolUseRule[] = [
-        {
-          matcher: "Write",
-          decision: "block",
-          reason: "Writeツールは禁止",
-        },
-      ];
-
-      const input: PreToolUseInput = {
-        session_id: "test-session",
-        transcript_path: "/tmp/transcript.json",
-        cwd: "/test/cwd",
-        hook_event_name: "PreToolUse",
-        tool_name: "Read",
-        tool_input: {
-          file_path: "/etc/passwd",
-        },
-      };
-
-      const response = await handlePreToolUse(input, rules);
-      expect(response).toEqual({});
-    });
-
     it("コマンドがマッチしない場合は空のオブジェクトを返す", async () => {
       const rules: PreToolUseRule[] = [
         {

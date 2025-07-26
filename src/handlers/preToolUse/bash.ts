@@ -1,7 +1,7 @@
 import { parseBashCommand } from "../../parsers/bashParser";
 import type { BashPreToolUseInput, PreToolUseResponse } from "../../types/hook";
 import { tryCatch } from "../../utils/result";
-import type { MatchedRule, PreToolUseRule } from "../preToolUse";
+import type { BashRule, MatchedRule } from "../preToolUse";
 import { selectMostRestrictiveRule } from "./utils";
 
 /**
@@ -10,7 +10,7 @@ import { selectMostRestrictiveRule } from "./utils";
  */
 export function handleBashTool(
   input: BashPreToolUseInput,
-  rules: PreToolUseRule[],
+  rules: BashRule[],
 ): PreToolUseResponse {
   // ルールの正規化（同じcommand, argsの組み合わせは後のもので上書き）
   const normalizedRules = normalizeBashRules(rules);
@@ -48,7 +48,7 @@ export function handleBashTool(
  * 同じcommandを持つルールは最後のもので上書きされる
  */
 function collectDefaultRules(
-  rules: PreToolUseRule[],
+  rules: BashRule[],
   command: string,
 ): MatchedRule[] {
   if (!rules) return [];
@@ -72,7 +72,7 @@ function collectDefaultRules(
  * argsパターンにマッチするすべてのルールを返す
  */
 function collectSpecificRules(
-  rules: PreToolUseRule[],
+  rules: BashRule[],
   bashCommand: { command: string; args: string },
 ): MatchedRule[] {
   if (!rules) return [];
@@ -110,9 +110,9 @@ function collectSpecificRules(
  * Bash用のルール正規化
  * 同じcommand/argsの組み合わせを持つルールは最後のもので上書き
  */
-function normalizeBashRules(rules: PreToolUseRule[]): PreToolUseRule[] {
+function normalizeBashRules(rules: BashRule[]): BashRule[] {
   const seen = new Set<string>();
-  const result: PreToolUseRule[] = [];
+  const result: BashRule[] = [];
 
   // 重複するキーは配列の後方のものを優先するため、逆順に走査して初出のもののみ採用
   for (let i = rules.length - 1; i >= 0; i--) {
