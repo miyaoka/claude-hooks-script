@@ -11,8 +11,8 @@ import { join } from "node:path";
  *
  * 最初に見つかったパスを返す
  */
+const configFileName = "hooks.config.json";
 export function resolveUserConfigPath(): string | undefined {
-  const configFileName = "hooks.config.json";
   const home = homedir();
 
   // 1. $CLAUDE_CONFIG_DIR
@@ -43,5 +43,5 @@ export function resolveUserConfigPath(): string | undefined {
  * プロジェクト設定ファイルのパスを解決する
  */
 export function resolveProjectConfigPath(projectRoot: string): string {
-  return join(projectRoot, "hooks.config.json");
+  return join(projectRoot, ".claude", configFileName);
 }

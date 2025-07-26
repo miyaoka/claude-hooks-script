@@ -2,6 +2,7 @@ import type {
   PreToolUseResponse,
   WebSearchPreToolUseInput,
 } from "../../types/hook";
+import { debugLog } from "../../utils/debug";
 import { matchPattern } from "../../utils/matcher";
 import type { RuleResult, WebSearchRule } from "../preToolUse";
 import { selectMostRestrictiveRule } from "./utils";
@@ -19,6 +20,7 @@ export function handleWebSearchTool(
   input: WebSearchPreToolUseInput,
   rules: WebSearchRule[],
 ): PreToolUseResponse {
+  debugLog("websearch: " + rules.toString());
   if (rules.length === 0) {
     return {};
   }

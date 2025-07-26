@@ -2,6 +2,7 @@ import type {
   PreToolUseResponse,
   WebFetchPreToolUseInput,
 } from "../../types/hook";
+import { debugLog } from "../../utils/debug";
 import { matchPattern } from "../../utils/matcher";
 import { tryCatch } from "../../utils/result";
 import type { RuleResult, WebFetchRule } from "../preToolUse";

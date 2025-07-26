@@ -42,8 +42,6 @@ export const handlePreToolUse = async (
   input: PreToolUseInput,
   rules: PreToolUseRule[],
 ): Promise<PreToolUseResponse> => {
-  debugLog(JSON.stringify(input));
-
   // ルールが空の場合は空のレスポンスを返す
   if (rules.length === 0) {
     return {};
