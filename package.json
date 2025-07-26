@@ -8,10 +8,17 @@
     "claude-hooks": "./src/index.ts"
   },
   "scripts": {
-    "test": "bun test"
+    "lint": "biome check",
+    "test": "bun test",
+    "typecheck": "tsc",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "biome": "^0.3.3",
+    "bun-types": "latest",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.2",
+    "prettier": "^3.6.2"
   },
   "peerDependencies": {
     "typescript": "^5"

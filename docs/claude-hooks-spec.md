@@ -1,8 +1,12 @@
 # Claude Hooks 仕様
 
+公式ドキュメントの内容写し
+
+https://docs.anthropic.com/en/docs/claude-code/hooks
+
 ## 概要
 
-Claude hooksは、Claude Codeのツール使用をインターセプトし、カスタムロジックを追加できる機能
+Claude hooks は、Claude Code のツール使用をインターセプトし、カスタムロジックを追加できる機能
 
 ## 設定ファイル
 
@@ -36,139 +40,180 @@ Claude hooksは、Claude Codeのツール使用をインターセプトし、カ
   - 正規表現: `"Edit|Write"` または `"Notebook.*"`
   - 空文字列または省略: すべてのイベントにマッチ
 - `type`: 現在は `"command"` のみサポート
-- `command`: 実行するBashコマンド
-- `timeout`: 最大実行時間（秒）、オプション
+- `command`: 実行する Bash コマンド
+- `timeout`(optional): 最大実行時間（秒）
 
-## Hook Types
+## Hook Events
 
 ### PreToolUse
+
 ツール実行前に呼ばれる。ツールの実行を許可/拒否できる
 
 ### PostToolUse
+
 ツール実行後に呼ばれる。結果のログ記録などに使用
 
 ### Notification
-Claudeが通知を送信するときに呼ばれる
+
+Claude が通知を送信するときに呼ばれる
 
 ### Stop
+
 メインエージェントが終了するときに呼ばれる
 
 ### SubagentStop
+
 サブエージェントが終了するときに呼ばれる
 
 ### PreCompact
+
 コンテキスト圧縮前に呼ばれる
 
-## Hook入力形式
+## Hook 入力形式
 
-hookスクリプトは標準入力からJSONを受け取る：
+hook スクリプトは標準入力から JSON を受け取る：
 
 ### 共通フィールド
-```json
+
+```ts
 {
-  "session_id": "string",
-  "transcript_path": "string",
-  "hook_event_name": "string"
+  // Common fields
+  session_id: string,
+  transcript_path: string,   // Path to conversation JSON
+  cwd: string              // The current working directory when the hook is invoked
+
+  // Event-specific fields
+  hook_event_name: string
+  ...
 }
 ```
 
 ### PreToolUse
+
 ```json
 {
-  "session_id": "string",
-  "transcript_path": "string",
+  "session_id": "abc123",
+  "transcript_path": "/Users/.../.claude/projects/.../00893aaf-19fa-41d2-8238-13269b9b3ca0.jsonl",
+  "cwd": "/Users/...",
   "hook_event_name": "PreToolUse",
-  "tool_name": "string",
-  "tool_input": { ... }
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/path/to/file.txt",
+    "content": "file content"
+  }
 }
 ```
 
 ### PostToolUse
+
 ```json
 {
-  "session_id": "string",
-  "transcript_path": "string",
+  "session_id": "abc123",
+  "transcript_path": "/Users/.../.claude/projects/.../00893aaf-19fa-41d2-8238-13269b9b3ca0.jsonl",
+  "cwd": "/Users/...",
   "hook_event_name": "PostToolUse",
-  "tool_name": "string",
-  "tool_input": { ... },
-  "tool_response": { ... }
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/path/to/file.txt",
+    "content": "file content"
+  },
+  "tool_response": {
+    "filePath": "/path/to/file.txt",
+    "success": true
+  }
 }
 ```
 
 ### Notification
+
 ```json
 {
-  "session_id": "string",
-  "transcript_path": "string",
+  "session_id": "abc123",
+  "transcript_path": "/Users/.../.claude/projects/.../00893aaf-19fa-41d2-8238-13269b9b3ca0.jsonl",
+  "cwd": "/Users/...",
   "hook_event_name": "Notification",
-  "message": "string"
+  "message": "Task completed successfully"
 }
 ```
 
-### Stop
+### Stop / SubagentStop
+
 ```json
 {
-  "session_id": "string",
-  "transcript_path": "string",
+  "session_id": "abc123",
+  "transcript_path": "~/.claude/projects/.../00893aaf-19fa-41d2-8238-13269b9b3ca0.jsonl",
   "hook_event_name": "Stop",
-  "stop_hook_active": boolean
+  "stop_hook_active": true
 }
 ```
 
-## Hook応答
+## Hook 応答
 
 ### 終了コード
+
 - `0`: 成功（ブロックしない）
 - `2`: ブロッキングエラー（ツール使用を阻止）
 - その他: 非ブロッキングエラー
 
-### JSON応答（オプション）
+### JSON 応答
 
-標準出力に出力する。
+標準出力に出力し、メインエージェントに制御メッセージを伝える
 
 #### 共通フィールド
-- `continue` (boolean): デフォルトtrue。falseでClaude全体の処理を停止
-- `stopReason` (string): `continue`がfalseの時の理由（ユーザーに表示、Claudeには非表示）
-- `suppressOutput` (boolean): デフォルトfalse。trueでstdoutをトランスクリプトから隠す
 
-#### PreToolUse
-```json
+```ts
 {
-  "decision": "approve" | "block" | undefined,
-  "reason": "判定の理由"
+  continue: boolean, // デフォルト true。false で Claude 全体の処理を停止
+  stopReason: string, // `continue`が false の時の理由（ユーザーに表示、Claude には非表示）
+  suppressOutput: boolean, // デフォルト false。true で stdout をトランスクリプトから隠す
 }
 ```
+
+#### PreToolUse
+
+```ts
+{
+  decision?: "approve" | "block",
+  reason: "判定の理由"
+}
+```
+
 - `decision`:
   - `"approve"`: 権限システムをバイパスしてツール使用を許可
   - `"block"`: ツール使用をブロック
   - `undefined`: デフォルトの権限フローを使用
-- `reason`: decisionの理由（Claudeに表示）
+- `reason`: decision の理由（Claude に表示）
 
 #### PostToolUse
-```json
+
+```ts
 {
-  "decision": "block" | undefined,
-  "reason": "ブロックの理由"
+  decision?: "block",
+  reason: "ブロックの理由"
 }
 ```
+
 - `decision`:
-  - `"block"`: reasonをClaudeにプロンプトとして表示
+  - `"block"`: reason を Claude にプロンプトとして表示
   - `undefined`: 通常処理
 
 #### Stop / SubagentStop
-```json
+
+```ts
 {
-  "decision": "block" | undefined,
+  decision?: "block",
   "reason": "続行方法の説明（必須）"
 }
 ```
+
 - `decision`:
-  - `"block"`: Claudeの停止を阻止
+  - `"block"`: Claude の停止を阻止
   - `undefined`: 通常の停止処理
-- `reason`: blockの場合、Claudeに続行方法を説明（必須）
+- `reason`: block の場合、Claude に続行方法を説明（必須）
 
 #### PreCompact / Notification
-特別なdecisionフィールドはない
+
+特別な decision フィールドはない
 
 ## 設定例
 

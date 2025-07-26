@@ -1,10 +1,10 @@
 import type { HookInput, HookResponse } from "./types";
-import { 
+import {
   handlePreToolUse,
   handlePostToolUse,
   handleNotification,
   handleSubagentStop,
-  handlePreCompact
+  handlePreCompact,
 } from "./handlers";
 
 // メインのルーティング関数

@@ -1,0 +1,10 @@
+# Lock files
+bun.lock
+
+# Build outputs
+**/dist
+**/build
+**/coverage
+
+# Logs
+*.log
