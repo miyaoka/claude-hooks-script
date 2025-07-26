@@ -1,7 +1,7 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import * as handlers from "../handlers";
 import type { HookInput } from "../types/hook";
-import { processHook } from "./hookHandler";
+import { processHook } from "./hookInputHandler";
 
 describe("hook処理", () => {
   test("PreToolUse hookが正しく処理される", async () => {
