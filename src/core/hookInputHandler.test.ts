@@ -23,7 +23,7 @@ describe("hook処理", () => {
 
     try {
       // Act
-      await processHook(input);
+      await processHook(input, []);
 
       // Assert - PreToolUse専用ハンドラーが呼ばれた
       expect(spy).toHaveBeenCalledTimes(1);
@@ -77,7 +77,7 @@ describe("hook処理", () => {
 
     for (const input of testCases) {
       // Act
-      const result = await processHook(input);
+      const result = await processHook(input, []);
 
       // Assert
       expect(result).toEqual({});

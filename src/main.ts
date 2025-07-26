@@ -1,3 +1,4 @@
+import { loadConfig } from "./config";
 import { processHook } from "./core/hookInputHandler";
 import { validateHookInput } from "./core/hookInputValidator";
 import { debugLog, dumpToTmp } from "./utils/debug";
@@ -33,8 +34,11 @@ export async function main(input: string): Promise<void> {
   // デバッグ: 入力を/tmpにダンプ
   await dumpToTmp(hookInput);
 
-  // TODO: 実際のhook処理を実装
-  await processHook(hookInput);
+  // 設定を読み込む（hookInputのcwdをプロジェクトルートとする）
+  const config = loadConfig(hookInput.cwd);
+
+  // hook処理を実行
+  await processHook(hookInput, config);
 
   // 現在は成功を返すだけ
   process.exit(0);

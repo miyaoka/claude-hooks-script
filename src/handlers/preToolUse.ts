@@ -6,6 +6,7 @@ import { handleWebSearchTool } from "./preToolUse/webSearch";
 
 // ルールの型定義
 interface BaseRule {
+  event: "preToolUse";
   decision?: "block" | "approve";
   reason: string;
 }
