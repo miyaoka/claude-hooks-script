@@ -17,6 +17,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const input: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
@@ -53,6 +54,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const inputPassword: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
@@ -70,6 +72,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const inputNormal: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
@@ -105,6 +108,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const input: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
@@ -148,6 +152,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const inputLog: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
@@ -165,6 +170,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const inputTmp: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
@@ -202,6 +208,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const input: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
@@ -237,6 +244,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const input: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
@@ -265,6 +273,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const input: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Read",
         tool_input: {
@@ -289,6 +298,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const input: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
@@ -315,6 +325,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const input: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Write",
         tool_input: {
@@ -344,6 +355,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const inputEdit: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Edit",
         tool_input: {
@@ -363,6 +375,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const inputMultiEdit: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "MultiEdit",
         tool_input: {
@@ -391,6 +404,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const input: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Read",
         tool_input: {
@@ -419,6 +433,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const input: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Write",
         tool_input: {

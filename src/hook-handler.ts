@@ -1,28 +1,12 @@
 import type { HookInput, HookResponse } from "./types";
-import {
-  handlePreToolUse,
-  handlePostToolUse,
-  handleNotification,
-  handleSubagentStop,
-  handlePreCompact,
-} from "./handlers";
+import { handlePreToolUse } from "./handlers";
 
-// メインのルーティング関数
+// PreToolUseのみを処理
 export const processHook = async (input: HookInput): Promise<HookResponse> => {
-  switch (input.hook_event_name) {
-    case "PreToolUse":
-      return handlePreToolUse(input);
-    case "PostToolUse":
-      return handlePostToolUse(input);
-    case "Notification":
-      return handleNotification(input);
-    case "Stop":
-      return {};
-    case "SubagentStop":
-      return handleSubagentStop(input);
-    case "PreCompact":
-      return handlePreCompact(input);
-    default:
-      throw new Error(`Unknown hook type: ${(input as any).hook_event_name}`);
+  if (input.hook_event_name === "PreToolUse") {
+    return handlePreToolUse(input);
   }
+  
+  // 他のhookは空のレスポンスを返す
+  return {};
 };
