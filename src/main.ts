@@ -1,6 +1,6 @@
 import { processHook } from "./core/hookHandler";
 import { debugLog, dumpToTmp } from "./utils/debug";
-import { validateHookInput } from "./core/validate";
+import { validateHookInput } from "./core/hookInputValidator";
 
 export async function main(input: string): Promise<void> {
   try {
