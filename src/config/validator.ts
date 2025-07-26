@@ -43,8 +43,8 @@ function isPreToolUseRule(rule: unknown): rule is PreToolUseRule {
       if (r.query !== undefined && typeof r.query !== "string") return false;
       break;
     default:
-      // 未知のツールは拒否
-      return false;
+      // 他のツールも許可する（将来の拡張性のため）
+      break;
   }
 
   return true;
@@ -55,15 +55,23 @@ function isPreToolUseRule(rule: unknown): rule is PreToolUseRule {
  */
 export function validateConfig(config: unknown): config is HookConfig {
   if (!Array.isArray(config)) {
+    console.error("Config validation error: Config must be an array");
     return false;
   }
 
+  let hasErrors = false;
+
   // 各ルールの検証
-  for (const rule of config) {
+  for (let i = 0; i < config.length; i++) {
+    const rule = config[i];
     if (!isPreToolUseRule(rule)) {
-      return false;
+      console.error(
+        `Config validation error: Invalid rule at index ${i}:`,
+        rule,
+      );
+      hasErrors = true;
     }
   }
 
-  return true;
+  return !hasErrors;
 }

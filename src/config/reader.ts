@@ -18,9 +18,11 @@ export function readConfig(path: string): HookConfig | undefined {
     }
 
     // 検証失敗時はundefinedを返す
+    console.error(`Config validation failed for ${path}`);
     return undefined;
-  } catch {
+  } catch (error) {
     // ファイル読み込みエラーまたはJSON解析エラー
+    console.error(`Config read error for ${path}: ${error}`);
     return undefined;
   }
 }

@@ -1,16 +1,16 @@
-import { loadConfig } from "./config";
 import { processHook } from "./core/hookInputHandler";
 import { validateHookInput } from "./core/hookInputValidator";
+import type { HookConfig } from "./types/userConfig";
 import { debugLog, dumpToTmp } from "./utils/debug";
 import { tryCatch } from "./utils/result";
 
-export async function main(input: string): Promise<void> {
+export async function main(input: string, config: HookConfig): Promise<void> {
   if (!input) {
     await debugLog("No input received");
     process.exit(0);
   }
 
-  // await debugLog(`Raw input: ${input}`);
+  await debugLog(`Raw input: ${input}`);
 
   const parseResult = tryCatch(() => JSON.parse(input));
 
@@ -34,8 +34,7 @@ export async function main(input: string): Promise<void> {
   // デバッグ: 入力を/tmpにダンプ
   await dumpToTmp(hookInput);
 
-  // 設定を読み込む（hookInputのcwdをプロジェクトルートとする）
-  const config = loadConfig(hookInput.cwd);
+  await debugLog(`config: ${JSON.stringify(config)}`);
 
   // hook処理を実行
   const result = await processHook(hookInput, config);
