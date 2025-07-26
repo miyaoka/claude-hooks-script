@@ -2,7 +2,7 @@
 export interface BaseHookInput {
   session_id: string;
   transcript_path: string;
-  hook_event_name: string;
+  cwd: string;
 }
 
 export interface PreToolUseInput extends BaseHookInput {
@@ -32,11 +32,16 @@ export interface SubagentStopInput extends BaseHookInput {
   hook_event_name: "SubagentStop";
 }
 
+export interface UserPromptSubmitInput extends BaseHookInput {
+  hook_event_name: "UserPromptSubmit";
+  prompt: string;
+}
+
 export interface PreCompactInput extends BaseHookInput {
   hook_event_name: "PreCompact";
 }
 
-export type HookInput = PreToolUseInput | PostToolUseInput | NotificationInput | StopInput | SubagentStopInput | PreCompactInput;
+export type HookInput = PreToolUseInput | PostToolUseInput | NotificationInput | StopInput | SubagentStopInput | UserPromptSubmitInput | PreCompactInput;
 
 // Hook応答の型定義
 export interface BaseHookResponse {
@@ -69,8 +74,17 @@ export interface NotificationResponse extends BaseHookResponse {
   // 特別なdecisionフィールドはない
 }
 
+export interface UserPromptSubmitResponse extends BaseHookResponse {
+  decision?: "block";
+  reason?: string;
+  hookSpecificOutput?: {
+    hookEventName: "UserPromptSubmit";
+    additionalContext?: string;
+  };
+}
+
 export interface PreCompactResponse extends BaseHookResponse {
   // 特別なdecisionフィールドはない
 }
 
-export type HookResponse = PreToolUseResponse | PostToolUseResponse | StopResponse | SubagentStopResponse | NotificationResponse | PreCompactResponse;
+export type HookResponse = PreToolUseResponse | PostToolUseResponse | StopResponse | SubagentStopResponse | NotificationResponse | UserPromptSubmitResponse | PreCompactResponse;

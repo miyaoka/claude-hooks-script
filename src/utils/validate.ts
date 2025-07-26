@@ -12,6 +12,7 @@ export function validateHookInput(input: unknown): input is HookInput {
   if (
     !isString(input.session_id) ||
     !isString(input.transcript_path) ||
+    !isString(input.cwd) ||
     !isString(input.hook_event_name)
   ) {
     return false;
@@ -29,6 +30,8 @@ export function validateHookInput(input: unknown): input is HookInput {
       return validateStop(input);
     case "SubagentStop":
       return validateSubagentStop(input);
+    case "UserPromptSubmit":
+      return validateUserPromptSubmit(input);
     case "PreCompact":
       return validatePreCompact(input);
     default:
@@ -77,6 +80,10 @@ function validateStop(input: Record<string, unknown>): boolean {
 function validateSubagentStop(_input: Record<string, unknown>): boolean {
   // SubagentStopは追加フィールドなし
   return true;
+}
+
+function validateUserPromptSubmit(input: Record<string, unknown>): boolean {
+  return isString(input.prompt);
 }
 
 function validatePreCompact(_input: Record<string, unknown>): boolean {

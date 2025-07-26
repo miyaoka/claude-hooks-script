@@ -65,6 +65,10 @@ Claude が通知を送信するときに呼ばれる
 
 サブエージェントが終了するときに呼ばれる
 
+### UserPromptSubmit
+
+ユーザーのプロンプトが送信されたときに呼ばれる。プロンプトの検証や事前処理に使用
+
 ### PreCompact
 
 コンテキスト圧縮前に呼ばれる
@@ -80,7 +84,7 @@ hook スクリプトは標準入力から JSON を受け取る：
   // Common fields
   session_id: string,
   transcript_path: string,   // Path to conversation JSON
-  cwd: string              // The current working directory when the hook is invoked
+  cwd: string,              // The current working directory when the hook is invoked
 
   // Event-specific fields
   hook_event_name: string
@@ -136,12 +140,25 @@ hook スクリプトは標準入力から JSON を受け取る：
 }
 ```
 
+### UserPromptSubmit
+
+```json
+{
+  "session_id": "abc123",
+  "transcript_path": "/Users/.../.claude/projects/.../00893aaf-19fa-41d2-8238-13269b9b3ca0.jsonl",
+  "cwd": "/Users/...",
+  "hook_event_name": "UserPromptSubmit",
+  "prompt": "Help me write a function to calculate factorial"
+}
+```
+
 ### Stop / SubagentStop
 
 ```json
 {
   "session_id": "abc123",
   "transcript_path": "~/.claude/projects/.../00893aaf-19fa-41d2-8238-13269b9b3ca0.jsonl",
+  "cwd": "/Users/...",
   "hook_event_name": "Stop",
   "stop_hook_active": true
 }
@@ -211,38 +228,25 @@ hook スクリプトは標準入力から JSON を受け取る：
   - `undefined`: 通常の停止処理
 - `reason`: block の場合、Claude に続行方法を説明（必須）
 
-#### PreCompact / Notification
+#### UserPromptSubmit
 
-特別な decision フィールドはない
-
-## 設定例
-
-```json
+```ts
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bunx claude-hooks"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bunx claude-hooks",
-            "timeout": 10
-          }
-        ]
-      }
-    ]
+  decision?: "block",
+  reason?: "ブロックの理由",
+  hookSpecificOutput?: {
+    hookEventName: "UserPromptSubmit",
+    additionalContext?: "プロンプトに追加するコンテキスト"
   }
 }
 ```
+
+- `decision`:
+  - `"block"`: プロンプトの処理をブロック
+  - `undefined`: 通常処理
+- `reason`: block の場合の理由（ユーザーに表示）
+- `hookSpecificOutput.additionalContext`: プロンプトに追加するコンテキスト（block しない場合のみ有効）
+
+#### PreCompact / Notification
+
+特別な decision フィールドはない
