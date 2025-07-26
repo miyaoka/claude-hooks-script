@@ -12,7 +12,15 @@ export async function dumpToTmp(input: HookInput): Promise<void> {
 }
 
 export async function debugLog(message: string): Promise<void> {
-  const timestamp = new Date().toISOString();
+  const timestamp = new Date().toLocaleString("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
   const logLine = `[${timestamp}] ${message}\n`;
   await appendFile("/tmp/claude-hook-debug.log", logLine);
 }

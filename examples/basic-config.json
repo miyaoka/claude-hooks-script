@@ -15,16 +15,32 @@
       "reason": "force pushは危険な操作のためブロック"
     },
     {
-      "matcher": "Write|Edit",
-      "args": "\\.env",
-      "decision": "block",
-      "reason": ".envファイルへの書き込みをブロック"
-    },
-    {
       "matcher": "Bash",
       "command": "npm",
       "args": "install",
       "reason": "npm installを実行しています"
+    },
+    {
+      "matcher": "WebFetch",
+      "decision": "approve",
+      "reason": "基本的にfetch ok"
+    },
+    {
+      "matcher": "WebFetch",
+      "decision": "block",
+      "domain": "www\\.google\\.com",
+      "reason": "ここはfetch不可"
+    },
+    {
+      "matcher": "WebSearch",
+      "decision": "approve",
+      "reason": "基本的にsearch ok"
+    },
+    {
+      "matcher": "WebSearch",
+      "decision": "block",
+      "query": "claude",
+      "reason": "ここはsearch不可"
     }
   ]
 }

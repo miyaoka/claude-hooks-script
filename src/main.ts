@@ -9,7 +9,7 @@ export async function main(input: string): Promise<void> {
     process.exit(0);
   }
 
-  await debugLog(`Raw input: ${input}`);
+  // await debugLog(`Raw input: ${input}`);
 
   const parseResult = tryCatch(() => JSON.parse(input));
 
