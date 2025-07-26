@@ -1,0 +1,32 @@
+{
+  "preToolUse": [
+    {
+      "event": "preToolUse",
+      "tool": "Bash",
+      "command": "ls",
+      "decision": "approve",
+      "reason": "安全なコマンド"
+    },
+    {
+      "event": "preToolUse",
+      "tool": "Bash",
+      "command": "rm",
+      "args": "-[rf]{2}\\s+~",
+      "decision": "block",
+      "reason": "ユーザーrootは削除不可"
+    },
+    {
+      "event": "preToolUse",
+      "tool": "Bash",
+      "command": "curl",
+      "reason": "WebFetchを使用すること"
+    },
+    {
+      "event": "preToolUse",
+      "tool": "WebFetch",
+      "domain": "evil\\.example\\.com",
+      "decision": "block",
+      "reason": "危険なサイトはアクセス禁止"
+    }
+  ]
+}
