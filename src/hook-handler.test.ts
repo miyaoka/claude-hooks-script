@@ -31,23 +31,46 @@ describe("hook処理", () => {
 
   test("PreToolUse以外のhookは空のレスポンスを返す", async () => {
     // Arrange
-    const hooks = [
-      "PostToolUse",
-      "Notification",
-      "Stop",
-      "SubagentStop",
-      "UserPromptSubmit",
-      "PreCompact",
+    const baseProps = {
+      session_id: "test-session",
+      transcript_path: "/path/to/transcript.jsonl",
+      cwd: "/test/cwd",
+    };
+
+    const testCases: HookInput[] = [
+      {
+        ...baseProps,
+        hook_event_name: "PostToolUse",
+        tool_name: "TestTool",
+        tool_input: {},
+        tool_response: {},
+      },
+      {
+        ...baseProps,
+        hook_event_name: "Notification",
+        message: "test message",
+      },
+      {
+        ...baseProps,
+        hook_event_name: "Stop",
+        stop_hook_active: false,
+      },
+      {
+        ...baseProps,
+        hook_event_name: "SubagentStop",
+      },
+      {
+        ...baseProps,
+        hook_event_name: "UserPromptSubmit",
+        prompt: "test prompt",
+      },
+      {
+        ...baseProps,
+        hook_event_name: "PreCompact",
+      },
     ];
 
-    for (const hookName of hooks) {
-      const input = {
-        session_id: "test-session",
-        transcript_path: "/path/to/transcript.jsonl",
-        cwd: "/test/cwd",
-        hook_event_name: hookName,
-      } as any;
-
+    for (const input of testCases) {
       // Act
       const result = await processHook(input);
 
