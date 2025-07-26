@@ -19,9 +19,7 @@
     "bun-types": "latest",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
-    "prettier": "^3.6.2"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
+    "prettier": "^3.6.2",
+    "typescript": "^5.8.3"
   }
 }
