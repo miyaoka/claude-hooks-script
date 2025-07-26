@@ -8,7 +8,7 @@ export interface PreToolUseRule {
   matcher?: string;
   command?: string;
   args?: string;
-  decision: "block" | "approve";
+  decision?: "block" | "approve";
   reason: string;
 }
 
@@ -58,13 +58,17 @@ function handleBashTool(
 
   // 各コマンドに対してルールをチェック
   parsedCommands.forEach(parsed => {
-    // デフォルト設定（argsなし）を収集
-    const defaultRules = collectDefaultRules(matchingRules, parsed.command);
-    matchedRules.push(...defaultRules);
-
     // 特定条件（argsあり）をチェック
     const specificRules = collectSpecificRules(matchingRules, parsed);
-    matchedRules.push(...specificRules);
+    
+    if (specificRules.length > 0) {
+      // 特定ルールがマッチした場合は、それだけを使用
+      matchedRules.push(...specificRules);
+    } else {
+      // 特定ルールがマッチしない場合のみ、デフォルト設定を使用
+      const defaultRules = collectDefaultRules(matchingRules, parsed.command);
+      matchedRules.push(...defaultRules);
+    }
   });
 
   return selectMostRestrictiveRule(matchedRules);
@@ -96,6 +100,8 @@ function collectSpecificRules(
 ): MatchedRule[] {
   if (!rules) return [];
   
+  // command+argsの組み合わせごとにMapで管理（後の定義で上書き）
+  const specificRulesMap = new Map<string, MatchedRule>();
   const matchedRules: MatchedRule[] = [];
 
   rules.forEach(rule => {
@@ -106,6 +112,7 @@ function collectSpecificRules(
     
     if (regexResult.value) {
       if (regexResult.value.test(parsed.args)) {
+        // マッチした場合、複数のルールが適用される可能性があるので配列に追加
         matchedRules.push({
           decision: rule.decision,
           reason: rule.reason
@@ -114,7 +121,9 @@ function collectSpecificRules(
     } else {
       // 無効な正規表現の場合は文字列として比較
       if (parsed.args.includes(args)) {
-        matchedRules.push({
+        // 文字列マッチの場合はMapで管理（同じargsは後で上書き）
+        const key = `${rule.command}:${rule.args}`;
+        specificRulesMap.set(key, {
           decision: rule.decision,
           reason: rule.reason
         });
@@ -122,7 +131,8 @@ function collectSpecificRules(
     }
   });
 
-  return matchedRules;
+  // Mapの値を配列に追加
+  return [...matchedRules, ...Array.from(specificRulesMap.values())];
 }
 
 function handleOtherTools(

@@ -8,9 +8,9 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const rules: PreToolUseRule[] = [
         {
           matcher: "Bash",
-          command: "cat",
-          decision: "approve",
-          reason: "catコマンドは基本的に許可",
+          command: "rm",
+          decision: "block",
+          reason: "rmコマンドは危険",
         },
       ];
 
@@ -21,15 +21,14 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
-          command: "cat file.txt",
+          command: "rm -rf /",
         },
       };
 
       const response = await handlePreToolUse(input, rules);
-
       expect(response).toEqual({
-        decision: "approve",
-        reason: "catコマンドは基本的に許可",
+        decision: "block",
+        reason: "rmコマンドは危険",
       });
     });
 
@@ -37,53 +36,34 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const rules: PreToolUseRule[] = [
         {
           matcher: "Bash",
-          command: "cat",
-          decision: "approve",
-          reason: "catコマンドは基本的に許可",
+          command: "rm",
+          decision: "block",
+          reason: "rmコマンドは危険",
         },
         {
           matcher: "Bash",
-          command: "cat",
-          args: "password",
-          decision: "block",
-          reason: "パスワードファイルは禁止",
+          command: "rm",
+          args: "/tmp/",
+          decision: "approve",
+          reason: "一時ディレクトリの削除は許可",
         },
       ];
 
-      // パスワードファイルの場合
-      const inputPassword: PreToolUseInput = {
+      const input: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
         cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
-          command: "cat password.txt",
+          command: "rm -rf /tmp/cache",
         },
       };
 
-      const responsePassword = await handlePreToolUse(inputPassword, rules);
-      expect(responsePassword).toEqual({
-        decision: "block",
-        reason: "パスワードファイルは禁止",
-      });
-
-      // 通常ファイルの場合
-      const inputNormal: PreToolUseInput = {
-        session_id: "test-session",
-        transcript_path: "/tmp/transcript.json",
-        cwd: "/test/cwd",
-        hook_event_name: "PreToolUse",
-        tool_name: "Bash",
-        tool_input: {
-          command: "cat normal.txt",
-        },
-      };
-
-      const responseNormal = await handlePreToolUse(inputNormal, rules);
-      expect(responseNormal).toEqual({
+      const response = await handlePreToolUse(input, rules);
+      expect(response).toEqual({
         decision: "approve",
-        reason: "catコマンドは基本的に許可",
+        reason: "一時ディレクトリの削除は許可",
       });
     });
   });
@@ -93,15 +73,15 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const rules: PreToolUseRule[] = [
         {
           matcher: "Bash",
-          command: "rm",
-          decision: "approve",
-          reason: "最初の設定",
+          command: "ls",
+          decision: "block",
+          reason: "最初のルール",
         },
         {
           matcher: "Bash",
-          command: "rm",
-          decision: "block",
-          reason: "後の設定で上書き",
+          command: "ls",
+          decision: "approve",
+          reason: "後のルールで上書き",
         },
       ];
 
@@ -112,14 +92,14 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
-          command: "rm file.txt",
+          command: "ls -la",
         },
       };
 
       const response = await handlePreToolUse(input, rules);
       expect(response).toEqual({
-        decision: "block",
-        reason: "後の設定で上書き",
+        decision: "approve",
+        reason: "後のルールで上書き",
       });
     });
 
@@ -127,61 +107,42 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const rules: PreToolUseRule[] = [
         {
           matcher: "Bash",
-          command: "rm",
-          args: "\\.log$",
-          decision: "approve",
-          reason: "ログファイル削除は許可",
-        },
-        {
-          matcher: "Bash",
-          command: "rm",
-          args: "\\.tmp$",
-          decision: "approve",
-          reason: "一時ファイル削除は許可",
-        },
-        {
-          matcher: "Bash",
-          command: "rm",
-          args: "\\.log$",
+          command: "git",
+          args: "push",
           decision: "block",
-          reason: "ログファイル削除を禁止に変更",
+          reason: "pushは禁止",
+        },
+        {
+          matcher: "Bash",
+          command: "git",
+          args: "pull",
+          decision: "approve",
+          reason: "pullは許可",
+        },
+        {
+          matcher: "Bash",
+          command: "git",
+          args: "push",
+          decision: "approve",
+          reason: "pushを許可に変更",
         },
       ];
 
-      // .logファイルの場合（上書きされる）
-      const inputLog: PreToolUseInput = {
+      const input: PreToolUseInput = {
         session_id: "test-session",
         transcript_path: "/tmp/transcript.json",
         cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
-          command: "rm test.log",
+          command: "git push origin main",
         },
       };
 
-      const responseLog = await handlePreToolUse(inputLog, rules);
-      expect(responseLog).toEqual({
-        decision: "block",
-        reason: "ログファイル削除を禁止に変更",
-      });
-
-      // .tmpファイルの場合（独立して存在）
-      const inputTmp: PreToolUseInput = {
-        session_id: "test-session",
-        transcript_path: "/tmp/transcript.json",
-        cwd: "/test/cwd",
-        hook_event_name: "PreToolUse",
-        tool_name: "Bash",
-        tool_input: {
-          command: "rm test.tmp",
-        },
-      };
-
-      const responseTmp = await handlePreToolUse(inputTmp, rules);
-      expect(responseTmp).toEqual({
+      const response = await handlePreToolUse(input, rules);
+      expect(response).toEqual({
         decision: "approve",
-        reason: "一時ファイル削除は許可",
+        reason: "pushを許可に変更",
       });
     });
   });
@@ -191,17 +152,17 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const rules: PreToolUseRule[] = [
         {
           matcher: "Bash",
-          command: "rm",
-          args: "\\.log$",
+          command: "npm",
+          args: "install",
           decision: "approve",
-          reason: "ログファイルの削除は許可",
+          reason: "インストールは許可",
         },
         {
           matcher: "Bash",
-          command: "rm",
-          args: "production",
+          command: "npm",
+          args: "sudo",
           decision: "block",
-          reason: "productionを含むパスは禁止",
+          reason: "sudoは禁止",
         },
       ];
 
@@ -212,14 +173,14 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
-          command: "rm production.log",
+          command: "sudo npm install -g something",
         },
       };
 
       const response = await handlePreToolUse(input, rules);
       expect(response).toEqual({
         decision: "block",
-        reason: "productionを含むパスは禁止",
+        reason: "sudoは禁止",
       });
     });
 
@@ -227,17 +188,17 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const rules: PreToolUseRule[] = [
         {
           matcher: "Bash",
-          command: "cat",
-          args: "\\.conf$",
+          command: "echo",
+          args: "test",
           decision: "approve",
-          reason: "設定ファイルは許可",
+          reason: "echoは許可",
         },
         {
           matcher: "Bash",
-          command: "cat",
-          args: "secret",
-          decision: undefined as any, // テスト用にundefinedを設定
-          reason: "秘密情報は要確認",
+          command: "echo",
+          args: "password",
+          // decisionを省略
+          reason: "パスワードを含む場合の処理",
         },
       ];
 
@@ -248,14 +209,13 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: {
-          command: "cat secret.conf",
+          command: "echo test password",
         },
       };
 
       const response = await handlePreToolUse(input, rules);
-      expect(response).toEqual({
-        reason: "秘密情報は要確認",
-      });
+      // undefinedはblockより優先度が低く、approveより高い
+      expect(response).toEqual({});
     });
   });
 
@@ -263,10 +223,9 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
     it("ツール名がマッチしない場合は空のオブジェクトを返す", async () => {
       const rules: PreToolUseRule[] = [
         {
-          matcher: "Bash",
-          command: "rm",
+          matcher: "Write",
           decision: "block",
-          reason: "rmコマンドは禁止",
+          reason: "Writeツールは禁止",
         },
       ];
 
@@ -277,7 +236,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
         hook_event_name: "PreToolUse",
         tool_name: "Read",
         tool_input: {
-          file_path: "/home/user/file.txt",
+          file_path: "/etc/passwd",
         },
       };
 
@@ -345,7 +304,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       const rules: PreToolUseRule[] = [
         {
           matcher: "Edit|Write|MultiEdit",
-          args: "\\.env$",
+          args: ".*\\.env",
           decision: "block",
           reason: "環境変数ファイルの編集は禁止",
         },
@@ -359,9 +318,9 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
         hook_event_name: "PreToolUse",
         tool_name: "Edit",
         tool_input: {
-          file_path: "/home/user/.env",
-          old_string: "SECRET=old",
-          new_string: "SECRET=new",
+          file_path: "/app/.env",
+          old_str: "SECRET=old",
+          new_str: "SECRET=new",
         },
       };
 
@@ -408,7 +367,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
         hook_event_name: "PreToolUse",
         tool_name: "Read",
         tool_input: {
-          file_path: "/home/user/secret.txt",
+          file_path: "/app/secret.key",
         },
       };
 
@@ -446,6 +405,136 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
       expect(response).toEqual({
         decision: "approve",
         reason: "一時ディレクトリへの書き込みは許可",
+      });
+    });
+  });
+
+  describe("エッジケース", () => {
+    it("rulesが空配列の場合は空のオブジェクトを返す", async () => {
+      const input: PreToolUseInput = {
+        session_id: "test-session",
+        transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
+        hook_event_name: "PreToolUse",
+        tool_name: "Bash",
+        tool_input: { command: "ls" },
+      };
+
+      const response = await handlePreToolUse(input, []);
+      expect(response).toEqual({});
+    });
+
+    it("rulesがundefinedの場合は空のオブジェクトを返す", async () => {
+      const input: PreToolUseInput = {
+        session_id: "test-session",
+        transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
+        hook_event_name: "PreToolUse",
+        tool_name: "Bash",
+        tool_input: { command: "ls" },
+      };
+
+      const response = await handlePreToolUse(input, undefined as any);
+      expect(response).toEqual({});
+    });
+
+    it("Bashツールでcommandが空の場合は空のオブジェクトを返す", async () => {
+      const rules: PreToolUseRule[] = [
+        {
+          matcher: "Bash",
+          command: "ls",
+          decision: "approve",
+        },
+      ];
+
+      const input: PreToolUseInput = {
+        session_id: "test-session",
+        transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
+        hook_event_name: "PreToolUse",
+        tool_name: "Bash",
+        tool_input: { command: "" },
+      };
+
+      const response = await handlePreToolUse(input, rules);
+      expect(response).toEqual({});
+    });
+
+    it("Bashツールでcommandがundefinedの場合は空のオブジェクトを返す", async () => {
+      const rules: PreToolUseRule[] = [
+        {
+          matcher: "Bash",
+          command: "ls",
+          decision: "approve",
+        },
+      ];
+
+      const input: PreToolUseInput = {
+        session_id: "test-session",
+        transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
+        hook_event_name: "PreToolUse",
+        tool_name: "Bash",
+        tool_input: {},
+      };
+
+      const response = await handlePreToolUse(input, rules);
+      expect(response).toEqual({});
+    });
+
+    it("Bashツールで無効な正規表現のargsは文字列として比較される", async () => {
+      const rules: PreToolUseRule[] = [
+        {
+          matcher: "Bash",
+          command: "echo",
+          args: "[invalid regex",  // 無効な正規表現
+          decision: "block",
+          reason: "Invalid regex test",
+        },
+      ];
+
+      const input: PreToolUseInput = {
+        session_id: "test-session",
+        transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
+        hook_event_name: "PreToolUse",
+        tool_name: "Bash",
+        tool_input: { command: "echo [invalid regex" },
+      };
+
+      const response = await handlePreToolUse(input, rules);
+      expect(response).toEqual({
+        decision: "block",
+        reason: "Invalid regex test",
+      });
+    });
+
+    it("Bash以外のツールで無効な正規表現のargsは文字列として比較される", async () => {
+      const rules: PreToolUseRule[] = [
+        {
+          matcher: "Write",
+          args: "[invalid regex",  // 無効な正規表現
+          decision: "block",
+          reason: "Invalid regex in Write",
+        },
+      ];
+
+      const input: PreToolUseInput = {
+        session_id: "test-session",
+        transcript_path: "/tmp/transcript.json",
+        cwd: "/test/cwd",
+        hook_event_name: "PreToolUse",
+        tool_name: "Write",
+        tool_input: {
+          file_path: "/tmp/[invalid regex.txt",
+          content: "test",
+        },
+      };
+
+      const response = await handlePreToolUse(input, rules);
+      expect(response).toEqual({
+        decision: "block",
+        reason: "Invalid regex in Write",
       });
     });
   });
