@@ -3,7 +3,7 @@ import type { HookInput } from "../types/hook";
 
 export async function dumpToTmp(input: HookInput): Promise<void> {
   const filename = `/tmp/claude-hook-dump.jsonl`;
-  const jsonLine = JSON.stringify(input) + "\n";
+  const jsonLine = `${JSON.stringify(input)}\n`;
 
   // Node.jsのfsモジュールを使って追記
   await appendFile(filename, jsonLine);

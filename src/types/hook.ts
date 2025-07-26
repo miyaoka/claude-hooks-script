@@ -41,7 +41,14 @@ export interface PreCompactInput extends BaseHookInput {
   hook_event_name: "PreCompact";
 }
 
-export type HookInput = PreToolUseInput | PostToolUseInput | NotificationInput | StopInput | SubagentStopInput | UserPromptSubmitInput | PreCompactInput;
+export type HookInput =
+  | PreToolUseInput
+  | PostToolUseInput
+  | NotificationInput
+  | StopInput
+  | SubagentStopInput
+  | UserPromptSubmitInput
+  | PreCompactInput;
 
 // Hook応答の型定義
 export interface BaseHookResponse {
@@ -87,4 +94,11 @@ export interface PreCompactResponse extends BaseHookResponse {
   // 特別なdecisionフィールドはない
 }
 
-export type HookResponse = PreToolUseResponse | PostToolUseResponse | StopResponse | SubagentStopResponse | NotificationResponse | UserPromptSubmitResponse | PreCompactResponse;
+export type HookResponse =
+  | PreToolUseResponse
+  | PostToolUseResponse
+  | StopResponse
+  | SubagentStopResponse
+  | NotificationResponse
+  | UserPromptSubmitResponse
+  | PreCompactResponse;

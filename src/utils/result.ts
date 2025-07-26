@@ -1,4 +1,4 @@
-export type Result<T, E = Error> = 
+export type Result<T, E = Error> =
   | { value: T; error?: undefined }
   | { value?: undefined; error: E };
 

@@ -1,5 +1,5 @@
-import { describe, it, expect } from "bun:test";
-import { tryCatch, type Result } from "./result";
+import { describe, expect, it } from "bun:test";
+import { type Result, tryCatch } from "./result";
 
 describe("tryCatch", () => {
   describe("成功ケース", () => {
@@ -69,7 +69,7 @@ describe("tryCatch", () => {
       function processData(data: string): Result<number> {
         return tryCatch(() => {
           const num = Number.parseInt(data);
-          if (isNaN(num)) {
+          if (Number.isNaN(num)) {
             throw new Error("Invalid number");
           }
           return num;
@@ -90,7 +90,7 @@ describe("tryCatch", () => {
       class CustomError extends Error {
         constructor(
           public code: number,
-          message: string
+          message: string,
         ) {
           super(message);
         }
