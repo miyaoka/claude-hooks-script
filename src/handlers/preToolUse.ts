@@ -1,5 +1,9 @@
 import { parseBashCommand } from "../parsers/bashParser";
-import type { PreToolUseInput, PreToolUseResponse } from "../types/hook";
+import type {
+  BashPreToolUseInput,
+  PreToolUseInput,
+  PreToolUseResponse,
+} from "../types/hook";
 import { tryCatch } from "../utils/result";
 
 // ルールの型定義
@@ -66,7 +70,7 @@ export const handlePreToolUse = async (
  * コマンドを解析し、該当するルールを適用する
  */
 function handleBashTool(
-  input: PreToolUseInput,
+  input: BashPreToolUseInput,
   rules: PreToolUseRule[],
 ): PreToolUseResponse {
   // 型ガードによりinput.tool_input.commandは確実にstring

@@ -4,22 +4,3 @@ export interface BaseHookInput {
   transcript_path: string;
   cwd: string;
 }
-
-// ツール名の型定義
-export type ToolName =
-  | "Bash"
-  | "Read"
-  | "Write"
-  | "Edit"
-  | "MultiEdit"
-  | "Glob"
-  | "Grep"
-  | "LS"
-  | "WebFetch"
-  | "WebSearch"
-  | "TodoWrite"
-  | "NotebookRead"
-  | "NotebookEdit"
-  | "Task"
-  | "ExitPlanMode"
-  | string; // MCPツールや将来の拡張のため

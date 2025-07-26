@@ -492,8 +492,8 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
         tool_name: "Edit",
         tool_input: {
           file_path: "/app/.env",
-          old_str: "SECRET=old",
-          new_str: "SECRET=new",
+          old_string: "SECRET=old",
+          new_string: "SECRET=new",
         },
       };
 
@@ -636,7 +636,9 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
         cwd: "/test/cwd",
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
-        tool_input: {},
+        tool_input: {
+          command: "",
+        },
       };
 
       const response = await handlePreToolUse(input, rules);

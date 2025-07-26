@@ -5,7 +5,7 @@ interface BasePreToolUseInput extends BaseHookInput {
 }
 
 // Bash用の入力型
-interface BashPreToolUseInput extends BasePreToolUseInput {
+export interface BashPreToolUseInput extends BasePreToolUseInput {
   tool_name: "Bash";
   tool_input: {
     command: string;
@@ -15,7 +15,7 @@ interface BashPreToolUseInput extends BasePreToolUseInput {
 }
 
 // Read用の入力型
-interface ReadPreToolUseInput extends BasePreToolUseInput {
+export interface ReadPreToolUseInput extends BasePreToolUseInput {
   tool_name: "Read";
   tool_input: {
     file_path: string;
@@ -25,7 +25,7 @@ interface ReadPreToolUseInput extends BasePreToolUseInput {
 }
 
 // Write用の入力型
-interface WritePreToolUseInput extends BasePreToolUseInput {
+export interface WritePreToolUseInput extends BasePreToolUseInput {
   tool_name: "Write";
   tool_input: {
     file_path: string;
@@ -34,7 +34,7 @@ interface WritePreToolUseInput extends BasePreToolUseInput {
 }
 
 // Edit用の入力型
-interface EditPreToolUseInput extends BasePreToolUseInput {
+export interface EditPreToolUseInput extends BasePreToolUseInput {
   tool_name: "Edit";
   tool_input: {
     file_path: string;
@@ -45,7 +45,7 @@ interface EditPreToolUseInput extends BasePreToolUseInput {
 }
 
 // MultiEdit用の入力型
-interface MultiEditPreToolUseInput extends BasePreToolUseInput {
+export interface MultiEditPreToolUseInput extends BasePreToolUseInput {
   tool_name: "MultiEdit";
   tool_input: {
     file_path: string;
@@ -58,7 +58,7 @@ interface MultiEditPreToolUseInput extends BasePreToolUseInput {
 }
 
 // Glob用の入力型
-interface GlobPreToolUseInput extends BasePreToolUseInput {
+export interface GlobPreToolUseInput extends BasePreToolUseInput {
   tool_name: "Glob";
   tool_input: {
     pattern: string;
@@ -67,7 +67,7 @@ interface GlobPreToolUseInput extends BasePreToolUseInput {
 }
 
 // Grep用の入力型
-interface GrepPreToolUseInput extends BasePreToolUseInput {
+export interface GrepPreToolUseInput extends BasePreToolUseInput {
   tool_name: "Grep";
   tool_input: {
     pattern: string;
@@ -86,7 +86,7 @@ interface GrepPreToolUseInput extends BasePreToolUseInput {
 }
 
 // LS用の入力型
-interface LSPreToolUseInput extends BasePreToolUseInput {
+export interface LSPreToolUseInput extends BasePreToolUseInput {
   tool_name: "LS";
   tool_input: {
     path: string;
@@ -95,7 +95,7 @@ interface LSPreToolUseInput extends BasePreToolUseInput {
 }
 
 // WebFetch用の入力型
-interface WebFetchPreToolUseInput extends BasePreToolUseInput {
+export interface WebFetchPreToolUseInput extends BasePreToolUseInput {
   tool_name: "WebFetch";
   tool_input: {
     url: string;
@@ -104,7 +104,7 @@ interface WebFetchPreToolUseInput extends BasePreToolUseInput {
 }
 
 // WebSearch用の入力型
-interface WebSearchPreToolUseInput extends BasePreToolUseInput {
+export interface WebSearchPreToolUseInput extends BasePreToolUseInput {
   tool_name: "WebSearch";
   tool_input: {
     query: string;
@@ -114,7 +114,7 @@ interface WebSearchPreToolUseInput extends BasePreToolUseInput {
 }
 
 // TodoWrite用の入力型
-interface TodoWritePreToolUseInput extends BasePreToolUseInput {
+export interface TodoWritePreToolUseInput extends BasePreToolUseInput {
   tool_name: "TodoWrite";
   tool_input: {
     todos: Array<{
@@ -127,7 +127,7 @@ interface TodoWritePreToolUseInput extends BasePreToolUseInput {
 }
 
 // NotebookRead用の入力型
-interface NotebookReadPreToolUseInput extends BasePreToolUseInput {
+export interface NotebookReadPreToolUseInput extends BasePreToolUseInput {
   tool_name: "NotebookRead";
   tool_input: {
     notebook_path: string;
@@ -136,7 +136,7 @@ interface NotebookReadPreToolUseInput extends BasePreToolUseInput {
 }
 
 // NotebookEdit用の入力型
-interface NotebookEditPreToolUseInput extends BasePreToolUseInput {
+export interface NotebookEditPreToolUseInput extends BasePreToolUseInput {
   tool_name: "NotebookEdit";
   tool_input: {
     notebook_path: string;
@@ -148,7 +148,7 @@ interface NotebookEditPreToolUseInput extends BasePreToolUseInput {
 }
 
 // Task用の入力型
-interface TaskPreToolUseInput extends BasePreToolUseInput {
+export interface TaskPreToolUseInput extends BasePreToolUseInput {
   tool_name: "Task";
   tool_input: {
     description: string;
@@ -158,7 +158,7 @@ interface TaskPreToolUseInput extends BasePreToolUseInput {
 }
 
 // ExitPlanMode用の入力型
-interface ExitPlanModePreToolUseInput extends BasePreToolUseInput {
+export interface ExitPlanModePreToolUseInput extends BasePreToolUseInput {
   tool_name: "ExitPlanMode";
   tool_input: {
     plan: string;
@@ -166,14 +166,8 @@ interface ExitPlanModePreToolUseInput extends BasePreToolUseInput {
 }
 
 // MCPツール用の入力型（mcp__で始まる）
-interface MCPPreToolUseInput extends BasePreToolUseInput {
+export interface MCPPreToolUseInput extends BasePreToolUseInput {
   tool_name: `mcp__${string}`;
-  tool_input: Record<string, unknown>;
-}
-
-// 未知のツール用の入力型
-interface UnknownPreToolUseInput extends BasePreToolUseInput {
-  tool_name: string;
   tool_input: Record<string, unknown>;
 }
 
@@ -193,5 +187,4 @@ export type PreToolUseInput =
   | NotebookEditPreToolUseInput
   | TaskPreToolUseInput
   | ExitPlanModePreToolUseInput
-  | MCPPreToolUseInput
-  | UnknownPreToolUseInput;
+  | MCPPreToolUseInput;
