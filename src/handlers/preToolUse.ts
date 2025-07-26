@@ -37,14 +37,15 @@ export const handlePreToolUse = async (
     // 空文字またはundefinedはすべてにマッチ
     if (!rule.matcher) return true;
 
-    try {
+    const regexResult = tryCatch(() => new RegExp(`^${rule.matcher}$`));
+
+    if (regexResult.value) {
       // 正規表現として評価
-      const regex = new RegExp(`^${rule.matcher}$`);
-      return regex.test(input.tool_name);
-    } catch {
-      // 無効な正規表現の場合は文字列として完全一致で比較
-      return rule.matcher === input.tool_name;
+      return regexResult.value.test(input.tool_name);
     }
+
+    // 無効な正規表現の場合は文字列として完全一致で比較
+    return rule.matcher === input.tool_name;
   });
 
   if (toolMatchedRules.length === 0) {
@@ -68,7 +69,8 @@ function handleBashTool(
   input: PreToolUseInput,
   rules: PreToolUseRule[],
 ): PreToolUseResponse {
-  const bashCommand = input.tool_input.command as string;
+  // 型ガードによりinput.tool_input.commandは確実にstring
+  const bashCommand = input.tool_input.command;
   if (!bashCommand) {
     return {};
   }
