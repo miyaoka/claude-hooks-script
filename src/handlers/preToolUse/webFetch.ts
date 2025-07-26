@@ -2,6 +2,7 @@ import type {
   PreToolUseResponse,
   WebFetchPreToolUseInput,
 } from "../../types/hook";
+import { matchPattern } from "../../utils/matcher";
 import { tryCatch } from "../../utils/result";
 import type { MatchedRule, WebFetchRule } from "../preToolUse";
 import { selectMostRestrictiveRule } from "./utils";
@@ -119,24 +120,11 @@ function matchSpecificRules(
   rules.forEach((rule) => {
     if (!rule.domain) return;
 
-    const domain = rule.domain;
-    const regexResult = tryCatch(() => new RegExp(domain));
-
-    if (regexResult.value) {
-      if (regexResult.value.test(hostname)) {
-        matchedRules.push({
-          decision: rule.decision,
-          reason: rule.reason,
-        });
-      }
-    } else {
-      // 無効な正規表現の場合は文字列として比較
-      if (hostname.includes(domain)) {
-        matchedRules.push({
-          decision: rule.decision,
-          reason: rule.reason,
-        });
-      }
+    if (matchPattern(rule.domain, hostname)) {
+      matchedRules.push({
+        decision: rule.decision,
+        reason: rule.reason,
+      });
     }
   });
 

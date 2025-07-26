@@ -2,6 +2,7 @@ import type {
   PreToolUseResponse,
   WebSearchPreToolUseInput,
 } from "../../types/hook";
+import { matchPattern } from "../../utils/matcher";
 import type { MatchedRule, WebSearchRule } from "../preToolUse";
 import { selectMostRestrictiveRule } from "./utils";
 
@@ -112,8 +113,7 @@ function matchSpecificRules(
     const ruleQuery = rule.query;
     if (!ruleQuery) return;
 
-    // 文字列として部分一致でマッチング
-    if (searchQuery.toLowerCase().includes(ruleQuery.toLowerCase())) {
+    if (matchPattern(ruleQuery, searchQuery)) {
       matchedRules.push({
         decision: rule.decision,
         reason: rule.reason,

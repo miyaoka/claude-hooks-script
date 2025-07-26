@@ -1,6 +1,6 @@
 import { parseBashCommand } from "../../parsers/bashParser";
 import type { BashPreToolUseInput, PreToolUseResponse } from "../../types/hook";
-import { tryCatch } from "../../utils/result";
+import { matchPattern } from "../../utils/matcher";
 import type { BashRule, MatchedRule } from "../preToolUse";
 import { selectMostRestrictiveRule } from "./utils";
 
@@ -12,6 +12,11 @@ export function handleBashTool(
   input: BashPreToolUseInput,
   rules: BashRule[],
 ): PreToolUseResponse {
+  // ルールが空の場合は空のレスポンスを返す
+  if (rules.length === 0) {
+    return {};
+  }
+
   // ルールの正規化（同じcommand, argsの組み合わせは後のもので上書き）
   const normalizedRules = normalizeBashRules(rules);
   const bashCommand = input.tool_input.command;
@@ -82,24 +87,11 @@ function collectSpecificRules(
   rules.forEach((rule) => {
     if (rule.command !== bashCommand.command || !rule.args) return;
 
-    const args = rule.args;
-    const regexResult = tryCatch(() => new RegExp(args));
-
-    if (regexResult.value) {
-      if (regexResult.value.test(bashCommand.args)) {
-        matchedRules.push({
-          decision: rule.decision,
-          reason: rule.reason,
-        });
-      }
-    } else {
-      // 無効な正規表現の場合は文字列として比較
-      if (bashCommand.args.includes(args)) {
-        matchedRules.push({
-          decision: rule.decision,
-          reason: rule.reason,
-        });
-      }
+    if (matchPattern(rule.args, bashCommand.args)) {
+      matchedRules.push({
+        decision: rule.decision,
+        reason: rule.reason,
+      });
     }
   });
 

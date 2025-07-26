@@ -59,37 +59,37 @@ describe("handleWebSearchTool", () => {
     });
   });
 
-  it("部分一致でクエリをマッチする", () => {
+  it("正規表現でクエリをマッチする", () => {
     const input = createInput("How to use Claude API");
     const rules: WebSearchRule[] = [
       {
         tool: "WebSearch",
         decision: "block",
-        query: "claude",
-        reason: "claudeを含む検索はブロック",
+        query: "Claude", // 正規表現でマッチ
+        reason: "Claudeを含む検索はブロック",
       },
     ];
     const result = handleWebSearchTool(input, rules);
     expect(result).toEqual({
       decision: "block",
-      reason: "claudeを含む検索はブロック",
+      reason: "Claudeを含む検索はブロック",
     });
   });
 
-  it("大文字小文字を無視してマッチする", () => {
-    const input = createInput("CLAUDE features");
+  it("文字列として部分一致する", () => {
+    const input = createInput("search for [invalid regex");
     const rules: WebSearchRule[] = [
       {
         tool: "WebSearch",
         decision: "block",
-        query: "claude",
-        reason: "claudeを含む検索はブロック",
+        query: "[invalid", // 無効な正規表現
+        reason: "無効な正規表現を含む検索はブロック",
       },
     ];
     const result = handleWebSearchTool(input, rules);
     expect(result).toEqual({
       decision: "block",
-      reason: "claudeを含む検索はブロック",
+      reason: "無効な正規表現を含む検索はブロック",
     });
   });
 
