@@ -11,7 +11,6 @@ Claude Code のツール使用をインターセプトし、カスタムロジ�
 
 - Bun (ランタイム・テストランナー)
 - TypeScript
-- TDD (Test-Driven Development)
 
 ## アーキテクチャ
 
@@ -19,10 +18,17 @@ Claude Code のツール使用をインターセプトし、カスタムロジ�
 - `src/types.ts`: 型定義
 - `docs/claude-hooks-spec.md`: Claude hooks 仕様のドキュメント
 
-## テスト
+## 検証コマンド
 
 ```sh
-bun test
+## lint
+bun run lint --fix
+
+## test
+bun run test
+
+## typecheck
+bun run typecheck
 ```
 
 TDD アプローチに従い、まずテストを書いてから実装する。

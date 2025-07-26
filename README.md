@@ -53,6 +53,12 @@ tail -f /tmp/claude-hook-dump.jsonl
 # 依存関係をインストール
 bun install
 
-# テスト
-bun test
+## lint
+bun run lint --fix
+
+## test
+bun run test
+
+## typecheck
+bun run typecheck
 ```
