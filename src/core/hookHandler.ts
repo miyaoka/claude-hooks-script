@@ -1,5 +1,5 @@
-import type { HookInput, HookResponse } from "./types";
-import { handlePreToolUse } from "./handlers";
+import type { HookInput, HookResponse } from "../types/hook";
+import { handlePreToolUse } from "../handlers";
 
 // PreToolUseのみを処理
 export const processHook = async (input: HookInput): Promise<HookResponse> => {

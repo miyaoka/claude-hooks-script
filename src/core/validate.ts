@@ -1,4 +1,4 @@
-import type { HookInput } from "../types";
+import type { HookInput } from "../types/hook";
 
 /**
  * HookInput型のバリデーション関数

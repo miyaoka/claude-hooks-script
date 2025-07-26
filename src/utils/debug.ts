@@ -1,5 +1,5 @@
 import { appendFile } from "node:fs/promises";
-import type { HookInput } from "../types";
+import type { HookInput } from "../types/hook";
 
 export async function dumpToTmp(input: HookInput): Promise<void> {
   const filename = `/tmp/claude-hook-dump.jsonl`;

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import { handlePreToolUse, type PreToolUseRule } from "./preToolUse";
-import type { PreToolUseInput } from "../types";
+import type { PreToolUseInput } from "../types/hook";
 
 describe("handlePreToolUse - 優先順位とマッチング", () => {
   describe("デフォルト設定と特定条件の優先順位", () => {
