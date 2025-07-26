@@ -4,7 +4,7 @@ import type {
 } from "../../types/hook";
 import { matchPattern } from "../../utils/matcher";
 import { tryCatch } from "../../utils/result";
-import type { MatchedRule, WebFetchRule } from "../preToolUse";
+import type { RuleResult, WebFetchRule } from "../preToolUse";
 import { selectMostRestrictiveRule } from "./utils";
 
 /**
@@ -41,7 +41,7 @@ export function handleWebFetchTool(
   const hostname = urlResult.value.hostname;
 
   // 2. ルールのマッチング
-  const matchedRules: MatchedRule[] = [];
+  const matchedRules: RuleResult[] = [];
 
   // 特定条件（domainあり）のマッチング
   const specificRules = matchSpecificRules(normalizedRules, hostname);
@@ -88,10 +88,10 @@ function normalizeWebFetchRules(rules: WebFetchRule[]): WebFetchRule[] {
  * デフォルトルール（domainなし）のマッチング
  * domainを持たないルールは最後のもので上書きされる
  */
-function matchDefaultRules(rules: WebFetchRule[]): MatchedRule[] {
+function matchDefaultRules(rules: WebFetchRule[]): RuleResult[] {
   if (!rules) return [];
 
-  const defaultRules = new Map<string, MatchedRule>();
+  const defaultRules = new Map<string, RuleResult>();
 
   rules.forEach((rule) => {
     if (!rule.domain) {
@@ -112,10 +112,10 @@ function matchDefaultRules(rules: WebFetchRule[]): MatchedRule[] {
 function matchSpecificRules(
   rules: WebFetchRule[],
   hostname: string,
-): MatchedRule[] {
+): RuleResult[] {
   if (!rules) return [];
 
-  const matchedRules: MatchedRule[] = [];
+  const matchedRules: RuleResult[] = [];
 
   rules.forEach((rule) => {
     if (!rule.domain) return;

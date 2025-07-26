@@ -3,7 +3,7 @@ import type {
   WebSearchPreToolUseInput,
 } from "../../types/hook";
 import { matchPattern } from "../../utils/matcher";
-import type { MatchedRule, WebSearchRule } from "../preToolUse";
+import type { RuleResult, WebSearchRule } from "../preToolUse";
 import { selectMostRestrictiveRule } from "./utils";
 
 /**
@@ -33,7 +33,7 @@ export function handleWebSearchTool(
   }
 
   // 2. ルールのマッチング
-  const matchedRules: MatchedRule[] = [];
+  const matchedRules: RuleResult[] = [];
 
   // 特定条件（queryあり）のマッチング
   const specificRules = matchSpecificRules(normalizedRules, query);
@@ -80,10 +80,10 @@ function normalizeWebSearchRules(rules: WebSearchRule[]): WebSearchRule[] {
  * デフォルトルール（queryなし）のマッチング
  * queryを持たないルールは最後のもので上書きされる
  */
-function matchDefaultRules(rules: WebSearchRule[]): MatchedRule[] {
+function matchDefaultRules(rules: WebSearchRule[]): RuleResult[] {
   if (!rules) return [];
 
-  const defaultRules = new Map<string, MatchedRule>();
+  const defaultRules = new Map<string, RuleResult>();
 
   rules.forEach((rule) => {
     if (!rule.query) {
@@ -104,10 +104,10 @@ function matchDefaultRules(rules: WebSearchRule[]): MatchedRule[] {
 function matchSpecificRules(
   rules: WebSearchRule[],
   searchQuery: string,
-): MatchedRule[] {
+): RuleResult[] {
   if (!rules) return [];
 
-  const matchedRules: MatchedRule[] = [];
+  const matchedRules: RuleResult[] = [];
 
   rules.forEach((rule) => {
     const ruleQuery = rule.query;

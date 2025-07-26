@@ -28,7 +28,7 @@ export interface WebSearchRule extends BaseRule {
 
 export type PreToolUseRule = BashRule | WebFetchRule | WebSearchRule;
 
-export interface MatchedRule {
+export interface RuleResult {
   decision: "block" | "approve" | undefined;
   reason: string;
 }

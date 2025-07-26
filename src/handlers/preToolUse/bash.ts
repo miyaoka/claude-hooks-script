@@ -1,7 +1,7 @@
 import { parseBashCommand } from "../../parsers/bashParser";
 import type { BashPreToolUseInput, PreToolUseResponse } from "../../types/hook";
 import { matchPattern } from "../../utils/matcher";
-import type { BashRule, MatchedRule } from "../preToolUse";
+import type { BashRule, RuleResult } from "../preToolUse";
 import { selectMostRestrictiveRule } from "./utils";
 
 /**
@@ -25,7 +25,7 @@ export function handleBashTool(
   }
 
   const parsedCommands = parseBashCommand(bashCommand);
-  const matchedRules: MatchedRule[] = [];
+  const matchedRules: RuleResult[] = [];
 
   // 各コマンドに対してルールをチェック
   parsedCommands.forEach((bashCommand) => {
@@ -52,13 +52,10 @@ export function handleBashTool(
  * デフォルトルール（argsなし）を収集
  * 同じcommandを持つルールは最後のもので上書きされる
  */
-function collectDefaultRules(
-  rules: BashRule[],
-  command: string,
-): MatchedRule[] {
+function collectDefaultRules(rules: BashRule[], command: string): RuleResult[] {
   if (!rules) return [];
 
-  const defaultRules = new Map<string, MatchedRule>();
+  const defaultRules = new Map<string, RuleResult>();
 
   rules.forEach((rule) => {
     if (rule.command === command && !rule.args) {
@@ -79,10 +76,10 @@ function collectDefaultRules(
 function collectSpecificRules(
   rules: BashRule[],
   bashCommand: { command: string; args: string },
-): MatchedRule[] {
+): RuleResult[] {
   if (!rules) return [];
 
-  const matchedRules: MatchedRule[] = [];
+  const matchedRules: RuleResult[] = [];
 
   rules.forEach((rule) => {
     if (rule.command !== bashCommand.command || !rule.args) return;
