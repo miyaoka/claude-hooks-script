@@ -5,17 +5,36 @@ export interface BaseHookInput {
   cwd: string;
 }
 
+// ツール名の型定義
+export type ToolName =
+  | "Bash"
+  | "Read"
+  | "Write"
+  | "Edit"
+  | "MultiEdit"
+  | "Glob"
+  | "Grep"
+  | "LS"
+  | "WebFetch"
+  | "WebSearch"
+  | "TodoWrite"
+  | "NotebookRead"
+  | "NotebookEdit"
+  | "Task"
+  | "ExitPlanMode"
+  | string; // MCPツールや将来の拡張のため
+
 export interface PreToolUseInput extends BaseHookInput {
   hook_event_name: "PreToolUse";
-  tool_name: string;
-  tool_input: Record<string, any>;
+  tool_name: ToolName;
+  tool_input: Record<string, unknown>;
 }
 
 export interface PostToolUseInput extends BaseHookInput {
   hook_event_name: "PostToolUse";
-  tool_name: string;
-  tool_input: Record<string, any>;
-  tool_response: any;
+  tool_name: ToolName;
+  tool_input: Record<string, unknown>;
+  tool_response: unknown;
 }
 
 export interface NotificationInput extends BaseHookInput {

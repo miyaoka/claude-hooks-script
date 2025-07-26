@@ -27,7 +27,7 @@ describe("hook処理", () => {
 
       // Assert - PreToolUse専用ハンドラーが呼ばれた
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(input);
+      expect(spy).toHaveBeenCalledWith(input, []);
     } finally {
       // スパイをリストア
       spy.mockRestore();
