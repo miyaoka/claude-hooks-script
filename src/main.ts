@@ -1,6 +1,6 @@
 import { processHook } from "./hook-handler";
-import type { HookInput } from "./types";
 import { debugLog, dumpToTmp } from "./utils/debug";
+import { validateHookInput } from "./utils/validate";
 
 export async function main(input: string): Promise<void> {
   try {
@@ -11,7 +11,16 @@ export async function main(input: string): Promise<void> {
 
     await debugLog(`Raw input: ${input}`);
 
-    const hookInput = JSON.parse(input) as HookInput;
+    const parsedInput = JSON.parse(input);
+    
+    // 入力の検証
+    if (!validateHookInput(parsedInput)) {
+      await debugLog("Validation error: Invalid hook input");
+      console.error("Invalid hook input");
+      process.exit(1);
+    }
+    
+    const hookInput = parsedInput;
 
     // デバッグ: 入力を/tmpにダンプ
     await dumpToTmp(hookInput);
