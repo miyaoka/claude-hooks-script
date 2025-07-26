@@ -1,5 +1,4 @@
 import { appendFile } from "node:fs/promises";
-import type { HookInput } from "../types/hook";
 
 // デバッグモードのグローバル状態
 let debugMode = false;
@@ -16,18 +15,6 @@ export function isDebugMode(): boolean {
 export function initDebugMode(cliDebug: boolean): void {
   const envDebug = process.env.CLAUDE_HOOK_DEBUG === "true";
   setDebugMode(cliDebug || envDebug);
-}
-
-export async function dumpToTmp(input: HookInput): Promise<void> {
-  if (!debugMode) return;
-
-  const filename = `/tmp/claude-hook-dump.jsonl`;
-  const jsonLine = `${JSON.stringify(input)}\n`;
-
-  // Node.jsのfsモジュールを使って追記
-  await appendFile(filename, jsonLine);
-
-  console.error(`Appended to: ${filename}`);
 }
 
 export async function debugLog(message: string): Promise<void> {

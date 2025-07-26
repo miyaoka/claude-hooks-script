@@ -69,18 +69,44 @@ TDD アプローチに従い、まずテストを書いてから実装する
 - コマンドとargsによるルールマッチング
 - 正規表現によるargsパターンマッチング
 - decision（block/approve）による実行制御
+- WebFetchツールのドメインベース制御
+- WebSearchツールのクエリベース制御
 
 ### デバッグ機能
 
-- `/tmp/claude-hook-dump.jsonl`: Hook入力のJSONLダンプ
-- `/tmp/claude-hook-debug.log`: デバッグログ
+- `/tmp/claude-hook-debug.log`: デバッグログ（デバッグモード時のみ）
+- `-d, --debug`オプションまたは環境変数`CLAUDE_HOOK_DEBUG=true`でデバッグモード有効化
+
+### 設定ファイル
+
+設定ファイルは以下の優先順位で読み込まれる：
+
+1. `$CLAUDE_CONFIG_DIR/hooks.config.json`
+2. `$HOME/.config/claude/hooks.config.json`
+3. `$HOME/.claude/hooks.config.json`
+4. `{プロジェクトルート}/.claude/hooks.config.json`
+
+全ての設定ファイルが読み込まれ、マージされる。起動時に設定ファイルの検証が行われ、無効な設定がある場合はエラーメッセージを表示して終了する
 
 ## Hook Types
 
 - PreToolUse: ツール実行前の検証（実装済み）
-- PostToolUse: ツール実行後の処理（未実装）
-- Notification: 通知の処理（未実装）
-- Stop: セッション終了時の処理（未実装）
-- SubagentStop: サブエージェント終了時の処理（未実装）
-- PreCompact: コンテキスト圧縮前の処理（未実装）
-- UserPromptSubmit: プロンプト送信時の処理（未実装）
+  - Bash: コマンドとargsでのマッチング
+  - WebFetch: URLのドメインでのマッチング
+  - WebSearch: 検索クエリでのマッチング
+
+## 使用方法
+
+```sh
+# Claude Code hookとして（標準入力経由）
+echo '{...}' | bunx @miyaoka/claude-hooks
+
+# ファイルから入力
+bunx @miyaoka/claude-hooks test-input.json
+
+# テストモード（サンプル入力で動作確認）
+bunx @miyaoka/claude-hooks --test
+
+# デバッグモード有効
+bunx @miyaoka/claude-hooks --debug
+```

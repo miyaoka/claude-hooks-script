@@ -1,32 +1,43 @@
-{
-  "preToolUse": [
-    {
-      "event": "preToolUse",
-      "tool": "Bash",
-      "command": "ls",
-      "decision": "approve",
-      "reason": "安全なコマンド"
-    },
-    {
-      "event": "preToolUse",
-      "tool": "Bash",
-      "command": "rm",
-      "args": "-[rf]{2}\\s+~",
-      "decision": "block",
-      "reason": "ユーザーrootは削除不可"
-    },
-    {
-      "event": "preToolUse",
-      "tool": "Bash",
-      "command": "curl",
-      "reason": "WebFetchを使用すること"
-    },
-    {
-      "event": "preToolUse",
-      "tool": "WebFetch",
-      "domain": "evil\\.example\\.com",
-      "decision": "block",
-      "reason": "危険なサイトはアクセス禁止"
-    }
-  ]
-}
+[
+  {
+    "event": "preToolUse",
+    "tool": "Bash",
+    "command": "ls",
+    "decision": "approve",
+    "reason": "安全なコマンド"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "Bash",
+    "command": "rm",
+    "args": "-rf\\s+~",
+    "decision": "block",
+    "reason": "ホームディレクトリの削除は禁止"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "Bash",
+    "command": "curl",
+    "reason": "curlの代わりにWebFetchツールを使用してください"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "WebFetch",
+    "decision": "approve",
+    "reason": "デフォルトで全てのURLを許可"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "WebFetch",
+    "domain": "localhost|127\\.0\\.0\\.1",
+    "decision": "block",
+    "reason": "ローカルホストへのアクセスは禁止"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "WebSearch",
+    "query": "password|api.?key|secret",
+    "decision": "block",
+    "reason": "機密情報の検索は禁止"
+  }
+]

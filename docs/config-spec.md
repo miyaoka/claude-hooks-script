@@ -2,36 +2,50 @@
 
 ## PreToolUse設定
 
-```typescript
-interface PreToolUseRule {
-  tool: string; // ツール名
-  command?: string; // Bash系ツールの場合のコマンド名
-  args?: string; // コマンドの引数パターン（正規表現）
-  decision: "block" | "approve";
-  reason: string;
-}
-```
+各ルールには以下のフィールドを指定する：
+
+- `event`: "preToolUse" - イベントタイプ（必須）
+- `tool`: ツール名（必須）。"Bash", "WebFetch", "WebSearch"、その他のツール名も指定可能
+- `reason`: 判定理由（必須）
+- `decision`: "block" または "approve" - 判定結果（オプション、未指定の場合はreasonのみ表示）
+
+ツール固有のフィールド：
+
+- Bashツール:
+  - `command`: コマンド名（オプション）
+  - `args`: 引数パターン（正規表現）（オプション）
+- WebFetchツール:
+  - `domain`: URLドメインパターン（正規表現）（オプション）
+- WebSearchツール:
+  - `query`: クエリパターン（正規表現）（オプション）
 
 ### 設定例
 
 ```json
-{
-  "preToolUse": [
-    {
-      "tool": "Bash",
-      "command": "rm",
-      "args": "-rf\\s+~",
-      "decision": "block",
-      "reason": "⚠️ ホームディレクトリの削除は禁止"
-    },
-    {
-      "tool": "Edit|Write|MultiEdit",
-      "args": "/etc/",
-      "decision": "block",
-      "reason": "⚠️ システムファイルの編集は禁止"
-    }
-  ]
-}
+[
+  {
+    "event": "preToolUse",
+    "tool": "Bash",
+    "command": "rm",
+    "args": "-rf\\s+~",
+    "decision": "block",
+    "reason": "⚠️ ホームディレクトリの削除は禁止"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "WebFetch",
+    "domain": "(internal|private)\\.company\\.com",
+    "decision": "block",
+    "reason": "⚠️ 内部サイトへのアクセスは禁止"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "WebSearch",
+    "query": "password|api.?key|secret",
+    "decision": "block",
+    "reason": "⚠️ 機密情報の検索は禁止"
+  }
+]
 ```
 
 ### Bashコマンドの処理
@@ -67,36 +81,38 @@ Bashツールの場合、コマンドは以下のように解析される：
 #### 設定例
 
 ```json
-{
-  "preToolUse": [
-    {
-      "tool": "Bash",
-      "command": "cat",
-      "decision": "approve",
-      "reason": "catコマンドは基本的に許可"
-    },
-    {
-      "tool": "Bash",
-      "command": "cat",
-      "args": "password|secret|\.env",
-      "decision": "block",
-      "reason": "⚠️ 機密情報を含む可能性のあるファイルの閲覧は禁止"
-    },
-    {
-      "tool": "Bash",
-      "command": "rm",
-      "decision": "block",
-      "reason": "rmコマンドはデフォルトで禁止"
-    },
-    {
-      "tool": "Bash",
-      "command": "rm",
-      "args": "\\.tmp$|\\.cache",
-      "decision": "approve",
-      "reason": "一時ファイルの削除は許可"
-    }
-  ]
-}
+[
+  {
+    "event": "preToolUse",
+    "tool": "Bash",
+    "command": "cat",
+    "decision": "approve",
+    "reason": "catコマンドは基本的に許可"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "Bash",
+    "command": "cat",
+    "args": "password|secret|\\.env",
+    "decision": "block",
+    "reason": "⚠️ 機密情報を含む可能性のあるファイルの閲覧は禁止"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "Bash",
+    "command": "rm",
+    "decision": "block",
+    "reason": "rmコマンドはデフォルトで禁止"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "Bash",
+    "command": "rm",
+    "args": "\\.tmp$|\\.cache",
+    "decision": "approve",
+    "reason": "一時ファイルの削除は許可"
+  }
+]
 ```
 
 この例では：
@@ -107,24 +123,24 @@ Bashツールの場合、コマンドは以下のように解析される：
 #### 複数マッチの例
 
 ```json
-{
-  "preToolUse": [
-    {
-      "tool": "Bash",
-      "command": "rm",
-      "args": "\\.log$",
-      "decision": "approve",
-      "reason": "ログファイルの削除は許可"
-    },
-    {
-      "tool": "Bash",
-      "command": "rm",
-      "args": "production",
-      "decision": "block",
-      "reason": "⚠️ productionを含むパスの削除は禁止"
-    }
-  ]
-}
+[
+  {
+    "event": "preToolUse",
+    "tool": "Bash",
+    "command": "rm",
+    "args": "\\.log$",
+    "decision": "approve",
+    "reason": "ログファイルの削除は許可"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "Bash",
+    "command": "rm",
+    "args": "production",
+    "decision": "block",
+    "reason": "⚠️ productionを含むパスの削除は禁止"
+  }
+]
 ```
 
 `rm production.log` の場合：
@@ -133,14 +149,69 @@ Bashツールの場合、コマンドは以下のように解析される：
 - `approve` と `block` が競合
 - `block` > `approve` なので、**ブロックされる**（安全側に倒す）
 
-## PostToolUse設定
+### WebFetchの設定
 
-（今後実装予定）
+WebFetchツールの場合、URLのドメイン部分でマッチングを行う：
 
-## その他のHook設定
+```json
+[
+  {
+    "event": "preToolUse",
+    "tool": "WebFetch",
+    "decision": "approve",
+    "reason": "デフォルトで全てのURLを許可"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "WebFetch",
+    "domain": "(github|gitlab)\\.com",
+    "decision": "approve",
+    "reason": "GitHub/GitLabは許可"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "WebFetch",
+    "domain": "localhost|127\\.0\\.0\\.1",
+    "decision": "block",
+    "reason": "⚠️ ローカルホストへのアクセスは禁止"
+  }
+]
+```
 
-- Stop/SubagentStop
-- Notification
-- PreCompact
+### WebSearchの設定
 
-（今後実装予定）
+WebSearchツールの場合、検索クエリでマッチングを行う：
+
+```json
+[
+  {
+    "event": "preToolUse",
+    "tool": "WebSearch",
+    "decision": "approve",
+    "reason": "デフォルトで全ての検索を許可"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "WebSearch",
+    "query": "\\b(typescript|javascript|python)\\b",
+    "decision": "approve",
+    "reason": "プログラミング言語の検索は許可"
+  },
+  {
+    "event": "preToolUse",
+    "tool": "WebSearch",
+    "query": "(crack|hack|exploit)",
+    "decision": "block",
+    "reason": "⚠️ 不正なアクセスに関する検索は禁止"
+  }
+]
+```
+
+## 設定ファイルの読み込み
+
+設定ファイルは以下の優先順位で読み込まれ、全ての設定がマージされる：
+
+1. `$CLAUDE_CONFIG_DIR/hooks.config.json`
+2. `$HOME/.config/claude/hooks.config.json`
+3. `$HOME/.claude/hooks.config.json`
+4. `{プロジェクトルート}/.claude/hooks.config.json`
