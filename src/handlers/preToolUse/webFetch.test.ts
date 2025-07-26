@@ -25,7 +25,7 @@ describe("handleWebFetchTool", () => {
   it("デフォルトでapproveする", () => {
     const input = createInput("https://example.com");
     const rules: WebFetchRule[] = [
-      { matcher: "WebFetch", decision: "approve", reason: "基本的にfetch ok" },
+      { tool: "WebFetch", decision: "approve", reason: "基本的にfetch ok" },
     ];
     const result = handleWebFetchTool(input, rules);
     expect(result).toEqual({
@@ -37,9 +37,9 @@ describe("handleWebFetchTool", () => {
   it("特定のドメインをblockする", () => {
     const input = createInput("https://www.google.com/search");
     const rules: WebFetchRule[] = [
-      { matcher: "WebFetch", decision: "approve", reason: "基本的にfetch ok" },
+      { tool: "WebFetch", decision: "approve", reason: "基本的にfetch ok" },
       {
-        matcher: "WebFetch",
+        tool: "WebFetch",
         decision: "block",
         domain: "www\\.google\\.com",
         reason: "ここはfetch不可",
@@ -56,7 +56,7 @@ describe("handleWebFetchTool", () => {
     const input = createInput("https://sub.example.com/page");
     const rules: WebFetchRule[] = [
       {
-        matcher: "WebFetch",
+        tool: "WebFetch",
         decision: "block",
         domain: ".*\\.example\\.com",
         reason: "example.comのサブドメインは全てブロック",
@@ -73,13 +73,13 @@ describe("handleWebFetchTool", () => {
     const input = createInput("https://www.google.com");
     const rules: WebFetchRule[] = [
       {
-        matcher: "WebFetch",
+        tool: "WebFetch",
         decision: "block",
         domain: "www\\.google\\.com",
         reason: "最初のルール",
       },
       {
-        matcher: "WebFetch",
+        tool: "WebFetch",
         decision: "approve",
         domain: "www\\.google\\.com",
         reason: "後のルール",
@@ -95,9 +95,9 @@ describe("handleWebFetchTool", () => {
   it("複数のルールがマッチした場合はblockが優先される", () => {
     const input = createInput("https://example.com");
     const rules: WebFetchRule[] = [
-      { matcher: "WebFetch", decision: "approve", reason: "デフォルトapprove" },
+      { tool: "WebFetch", decision: "approve", reason: "デフォルトapprove" },
       {
-        matcher: "WebFetch",
+        tool: "WebFetch",
         decision: "block",
         domain: "example\\.com",
         reason: "example.comはblock",
@@ -113,7 +113,7 @@ describe("handleWebFetchTool", () => {
   it("無効なURLの場合は空のレスポンスを返す", () => {
     const input = createInput("not-a-valid-url");
     const rules: WebFetchRule[] = [
-      { matcher: "WebFetch", decision: "block", reason: "全てblock" },
+      { tool: "WebFetch", decision: "block", reason: "全てblock" },
     ];
     const result = handleWebFetchTool(input, rules);
     expect(result).toEqual({});
@@ -121,7 +121,7 @@ describe("handleWebFetchTool", () => {
 
   it("decisionがundefinedの場合はreasonのみ返す", () => {
     const input = createInput("https://example.com");
-    const rules: WebFetchRule[] = [{ matcher: "WebFetch", reason: "理由のみ" }];
+    const rules: WebFetchRule[] = [{ tool: "WebFetch", reason: "理由のみ" }];
     const result = handleWebFetchTool(input, rules);
     expect(result).toEqual({
       reason: "理由のみ",

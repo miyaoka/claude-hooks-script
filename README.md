@@ -25,7 +25,7 @@ Claude Code の設定ファイル（`~/.claude/settings.json`または`.claude/s
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "",
+        "tool": "",
         "hooks": [
           {
             "type": "command",

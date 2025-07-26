@@ -1,35 +1,35 @@
 {
   "preToolUse": [
     {
-      "matcher": "Bash",
+      "tool": "Bash",
       "command": "rm",
       "decision": "block",
       "reason": "すべてのrmコマンドをブロック（argsなし）"
     },
     {
-      "matcher": "Bash",
+      "tool": "Bash",
       "command": "rm",
       "args": "\\.(txt|md)$",
       "decision": "approve",
       "reason": "テキストファイルの削除は許可"
     },
     {
-      "matcher": ".*",
+      "tool": ".*",
       "args": "/etc/",
       "decision": "block",
       "reason": "/etc/ディレクトリへのアクセスをブロック"
     },
     {
-      "matcher": "Write|Edit|MultiEdit",
+      "tool": "Write|Edit|MultiEdit",
       "args": "\\.(js|ts|jsx|tsx)$",
       "reason": "JavaScriptファイルを編集中"
     },
     {
-      "matcher": "WebFetch|WebSearch",
+      "tool": "WebFetch|WebSearch",
       "reason": "Web検索を実行中"
     },
     {
-      "matcher": "mcp__.*",
+      "tool": "mcp__.*",
       "decision": "block",
       "reason": "MCPツールの使用をブロック"
     }

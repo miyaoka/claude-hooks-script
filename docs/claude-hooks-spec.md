@@ -19,7 +19,7 @@ Claude hooks は、Claude Code のツール使用をインターセプトし、�
   "hooks": {
     "EventName": [
       {
-        "matcher": "ToolPattern",
+        "tool": "ToolPattern",
         "hooks": [
           {
             "type": "command",
@@ -35,7 +35,7 @@ Claude hooks は、Claude Code のツール使用をインターセプトし、�
 
 ### パラメータ
 
-- `matcher`: ツール名のパターン（大文字小文字を区別）
+- `tool`: ツール名のパターン（大文字小文字を区別）
   - 完全一致: `"Write"`
   - 正規表現: `"Edit|Write"` または `"Notebook.*"`
   - 空文字列または省略: すべてのイベントにマッチ

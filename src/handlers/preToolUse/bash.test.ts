@@ -7,7 +7,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
     it("argsなしのデフォルト設定が適用される", async () => {
       const rules: PreToolUseRule[] = [
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "rm",
           decision: "block",
           reason: "rmコマンドは危険",
@@ -35,13 +35,13 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
     it("argsありの設定がデフォルト設定より優先される", async () => {
       const rules: PreToolUseRule[] = [
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "rm",
           decision: "block",
           reason: "rmコマンドは危険",
         },
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "rm",
           args: "/tmp/",
           decision: "approve",
@@ -72,13 +72,13 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
     it("argsなしの同じcommandは後者で上書きされる", async () => {
       const rules: PreToolUseRule[] = [
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "ls",
           decision: "block",
           reason: "最初のルール",
         },
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "ls",
           decision: "approve",
           reason: "後のルールで上書き",
@@ -106,21 +106,21 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
     it("argsありはcommandとargs両方が同一の場合のみ上書きされる", async () => {
       const rules: PreToolUseRule[] = [
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "git",
           args: "push",
           decision: "block",
           reason: "pushは禁止",
         },
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "git",
           args: "pull",
           decision: "approve",
           reason: "pullは許可",
         },
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "git",
           args: "push",
           decision: "approve",
@@ -151,14 +151,14 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
     it("block > approveの優先順位で安全側に倒される", async () => {
       const rules: PreToolUseRule[] = [
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "rm",
           args: "/tmp/",
           decision: "approve",
           reason: "一時ディレクトリの削除は許可",
         },
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "rm",
           args: "important",
           decision: "block",
@@ -187,14 +187,14 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
     it("block > undefined > approveの優先順位", async () => {
       const rules: PreToolUseRule[] = [
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "echo",
           args: "test",
           decision: "approve",
           reason: "echoは許可",
         },
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "echo",
           args: "password",
           // decisionを省略
@@ -225,7 +225,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
     it("コマンドがマッチしない場合は空のオブジェクトを返す", async () => {
       const rules: PreToolUseRule[] = [
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "rm",
           decision: "block",
           reason: "rmコマンドは禁止",
@@ -268,7 +268,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
     it("Bashツールでcommandが空の場合は空のオブジェクトを返す", async () => {
       const rules: PreToolUseRule[] = [
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "ls",
           decision: "approve",
           reason: "lsコマンドは許可",
@@ -291,7 +291,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
     it("Bashツールでcommandがundefinedの場合は空のオブジェクトを返す", async () => {
       const rules: PreToolUseRule[] = [
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "ls",
           decision: "approve",
           reason: "lsコマンドは許可",
@@ -316,7 +316,7 @@ describe("handlePreToolUse - 優先順位とマッチング", () => {
     it("Bashツールで無効な正規表現のargsは文字列として比較される", async () => {
       const rules: PreToolUseRule[] = [
         {
-          matcher: "Bash",
+          tool: "Bash",
           command: "echo",
           args: "[invalid regex", // 無効な正規表現
           decision: "block",

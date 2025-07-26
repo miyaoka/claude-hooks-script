@@ -1,43 +1,43 @@
 {
   "preToolUse": [
     {
-      "matcher": "Bash",
+      "tool": "Bash",
       "command": "rm",
       "args": "-rf",
       "decision": "block",
       "reason": "危険なrmコマンドの実行をブロック"
     },
     {
-      "matcher": "Bash",
+      "tool": "Bash",
       "command": "git",
       "args": "push.*--force",
       "decision": "block",
       "reason": "force pushは危険な操作のためブロック"
     },
     {
-      "matcher": "Bash",
+      "tool": "Bash",
       "command": "npm",
       "args": "install",
       "reason": "npm installを実行しています"
     },
     {
-      "matcher": "WebFetch",
+      "tool": "WebFetch",
       "decision": "approve",
       "reason": "基本的にfetch ok"
     },
     {
-      "matcher": "WebFetch",
+      "tool": "WebFetch",
       "decision": "block",
       "domain": "www\\.google\\.com",
       "reason": "ここはfetch不可"
     },
     {
-      "matcher": "WebSearch",
+      "tool": "WebSearch",
       "decision": "approve",
       "reason": "基本的にsearch ok"
     },
     {
-      "matcher": "WebSearch",
+      "tool": "WebSearch",
       "decision": "block",
       "query": "claude",
       "reason": "ここはsearch不可"

@@ -25,7 +25,7 @@ describe("handleWebSearchTool", () => {
     const input = createInput("test query");
     const rules: WebSearchRule[] = [
       {
-        matcher: "WebSearch",
+        tool: "WebSearch",
         decision: "approve",
         reason: "基本的にsearch ok",
       },
@@ -41,12 +41,12 @@ describe("handleWebSearchTool", () => {
     const input = createInput("claude ai assistant");
     const rules: WebSearchRule[] = [
       {
-        matcher: "WebSearch",
+        tool: "WebSearch",
         decision: "approve",
         reason: "基本的にsearch ok",
       },
       {
-        matcher: "WebSearch",
+        tool: "WebSearch",
         decision: "block",
         query: "claude",
         reason: "ここはsearch不可",
@@ -63,7 +63,7 @@ describe("handleWebSearchTool", () => {
     const input = createInput("How to use Claude API");
     const rules: WebSearchRule[] = [
       {
-        matcher: "WebSearch",
+        tool: "WebSearch",
         decision: "block",
         query: "claude",
         reason: "claudeを含む検索はブロック",
@@ -80,7 +80,7 @@ describe("handleWebSearchTool", () => {
     const input = createInput("CLAUDE features");
     const rules: WebSearchRule[] = [
       {
-        matcher: "WebSearch",
+        tool: "WebSearch",
         decision: "block",
         query: "claude",
         reason: "claudeを含む検索はブロック",
@@ -97,13 +97,13 @@ describe("handleWebSearchTool", () => {
     const input = createInput("claude test");
     const rules: WebSearchRule[] = [
       {
-        matcher: "WebSearch",
+        tool: "WebSearch",
         decision: "block",
         query: "claude",
         reason: "最初のルール",
       },
       {
-        matcher: "WebSearch",
+        tool: "WebSearch",
         decision: "approve",
         query: "claude",
         reason: "後のルール",
@@ -120,12 +120,12 @@ describe("handleWebSearchTool", () => {
     const input = createInput("test query");
     const rules: WebSearchRule[] = [
       {
-        matcher: "WebSearch",
+        tool: "WebSearch",
         decision: "approve",
         reason: "デフォルトapprove",
       },
       {
-        matcher: "WebSearch",
+        tool: "WebSearch",
         decision: "block",
         query: "test",
         reason: "testを含むクエリはblock",
@@ -140,9 +140,7 @@ describe("handleWebSearchTool", () => {
 
   it("decisionがundefinedの場合はreasonのみ返す", () => {
     const input = createInput("test query");
-    const rules: WebSearchRule[] = [
-      { matcher: "WebSearch", reason: "理由のみ" },
-    ];
+    const rules: WebSearchRule[] = [{ tool: "WebSearch", reason: "理由のみ" }];
     const result = handleWebSearchTool(input, rules);
     expect(result).toEqual({
       reason: "理由のみ",

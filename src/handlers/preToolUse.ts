@@ -11,18 +11,18 @@ interface BaseRule {
 }
 
 export interface BashRule extends BaseRule {
-  matcher: "Bash";
+  tool: "Bash";
   command?: string;
   args?: string;
 }
 
 export interface WebFetchRule extends BaseRule {
-  matcher: "WebFetch";
+  tool: "WebFetch";
   domain?: string;
 }
 
 export interface WebSearchRule extends BaseRule {
-  matcher: "WebSearch";
+  tool: "WebSearch";
   query?: string;
 }
 
@@ -53,17 +53,17 @@ export const handlePreToolUse = async (
     case "Bash":
       return handleBashTool(
         input,
-        rules.filter((rule) => rule.matcher === "Bash"),
+        rules.filter((rule) => rule.tool === "Bash"),
       );
     case "WebFetch":
       return handleWebFetchTool(
         input,
-        rules.filter((rule) => rule.matcher === "WebFetch"),
+        rules.filter((rule) => rule.tool === "WebFetch"),
       );
     case "WebSearch":
       return handleWebSearchTool(
         input,
-        rules.filter((rule) => rule.matcher === "WebSearch"),
+        rules.filter((rule) => rule.tool === "WebSearch"),
       );
     default:
       // その他のツールは何もしない

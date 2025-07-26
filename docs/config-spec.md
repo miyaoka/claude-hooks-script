@@ -4,9 +4,9 @@
 
 ```typescript
 interface PreToolUseRule {
-  matcher?: string;       // ツール名のパターン（正規表現）。省略または""ですべてにマッチ
-  command?: string;       // Bash系ツールの場合のコマンド名
-  args?: string;          // コマンドの引数パターン（正規表現）
+  tool: string; // ツール名
+  command?: string; // Bash系ツールの場合のコマンド名
+  args?: string; // コマンドの引数パターン（正規表現）
   decision: "block" | "approve";
   reason: string;
 }
@@ -18,14 +18,14 @@ interface PreToolUseRule {
 {
   "preToolUse": [
     {
-      "matcher": "Bash",
+      "tool": "Bash",
       "command": "rm",
       "args": "-rf\\s+~",
       "decision": "block",
       "reason": "⚠️ ホームディレクトリの削除は禁止"
     },
     {
-      "matcher": "Edit|Write|MultiEdit",
+      "tool": "Edit|Write|MultiEdit",
       "args": "/etc/",
       "decision": "block",
       "reason": "⚠️ システムファイルの編集は禁止"
@@ -70,26 +70,26 @@ Bashツールの場合、コマンドは以下のように解析される：
 {
   "preToolUse": [
     {
-      "matcher": "Bash",
+      "tool": "Bash",
       "command": "cat",
       "decision": "approve",
       "reason": "catコマンドは基本的に許可"
     },
     {
-      "matcher": "Bash",
+      "tool": "Bash",
       "command": "cat",
       "args": "password|secret|\.env",
       "decision": "block",
       "reason": "⚠️ 機密情報を含む可能性のあるファイルの閲覧は禁止"
     },
     {
-      "matcher": "Bash",
+      "tool": "Bash",
       "command": "rm",
       "decision": "block",
       "reason": "rmコマンドはデフォルトで禁止"
     },
     {
-      "matcher": "Bash",
+      "tool": "Bash",
       "command": "rm",
       "args": "\\.tmp$|\\.cache",
       "decision": "approve",
@@ -100,6 +100,7 @@ Bashツールの場合、コマンドは以下のように解析される：
 ```
 
 この例では：
+
 - `cat` は基本的に許可されるが、パスワードや秘密情報を含むファイルはブロック
 - `rm` は基本的に禁止されるが、一時ファイルの削除は許可
 
@@ -109,14 +110,14 @@ Bashツールの場合、コマンドは以下のように解析される：
 {
   "preToolUse": [
     {
-      "matcher": "Bash",
+      "tool": "Bash",
       "command": "rm",
       "args": "\\.log$",
       "decision": "approve",
       "reason": "ログファイルの削除は許可"
     },
     {
-      "matcher": "Bash", 
+      "tool": "Bash",
       "command": "rm",
       "args": "production",
       "decision": "block",
@@ -127,6 +128,7 @@ Bashツールの場合、コマンドは以下のように解析される：
 ```
 
 `rm production.log` の場合：
+
 - 両方のルールにマッチ
 - `approve` と `block` が競合
 - `block` > `approve` なので、**ブロックされる**（安全側に倒す）
