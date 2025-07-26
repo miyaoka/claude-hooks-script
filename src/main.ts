@@ -38,8 +38,11 @@ export async function main(input: string): Promise<void> {
   const config = loadConfig(hookInput.cwd);
 
   // hook処理を実行
-  await processHook(hookInput, config);
+  const result = await processHook(hookInput, config);
 
-  // 現在は成功を返すだけ
+  // 結果を標準出力に出力してclaudeに伝える
+  console.log(JSON.stringify(result));
+
+  // 成功を返す
   process.exit(0);
 }

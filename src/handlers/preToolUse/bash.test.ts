@@ -515,5 +515,34 @@ describe("handlePreToolUse - Bash", () => {
         reason: "HTTPは禁止",
       });
     });
+
+    it("rm -rf", async () => {
+      const result = {
+        decision: "block",
+        reason: "ユーザーroot削除禁止",
+      } as const;
+      const rules: PreToolUseRule[] = [
+        createBashRule({
+          command: "rm",
+          args: "-[rf]{2}\\s+~",
+          ...result,
+        }),
+      ];
+      expect(
+        await handlePreToolUse(createBashInput("rm -rf ~"), rules),
+      ).toEqual(result);
+      expect(
+        await handlePreToolUse(createBashInput("rm -fr ~"), rules),
+      ).toEqual(result);
+      expect(
+        await handlePreToolUse(createBashInput("rm -rf ~/"), rules),
+      ).toEqual(result);
+      expect(
+        await handlePreToolUse(createBashInput("cd ~ && rm -rf ~"), rules),
+      ).toEqual(result);
+      expect(
+        await handlePreToolUse(createBashInput("rm -rf ~/ && pwd"), rules),
+      ).toEqual(result);
+    });
   });
 });

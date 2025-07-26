@@ -20,7 +20,7 @@ export function handleWebSearchTool(
   input: WebSearchPreToolUseInput,
   rules: WebSearchRule[],
 ): PreToolUseResponse {
-  debugLog("websearch: " + rules.toString());
+  debugLog(`websearch: ${rules.toString()}`);
   if (rules.length === 0) {
     return {};
   }

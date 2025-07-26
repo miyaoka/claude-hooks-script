@@ -1,5 +1,4 @@
 import type { PreToolUseInput, PreToolUseResponse } from "../types/hook";
-import { debugLog } from "../utils/debug";
 import { handleBashTool } from "./preToolUse/bash";
 import { handleWebFetchTool } from "./preToolUse/webFetch";
 import { handleWebSearchTool } from "./preToolUse/webSearch";
