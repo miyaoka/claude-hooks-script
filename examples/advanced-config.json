@@ -1,0 +1,37 @@
+{
+  "preToolUse": [
+    {
+      "matcher": "Bash",
+      "command": "rm",
+      "decision": "block",
+      "reason": "すべてのrmコマンドをブロック（argsなし）"
+    },
+    {
+      "matcher": "Bash",
+      "command": "rm",
+      "args": "\\.(txt|md)$",
+      "decision": "approve",
+      "reason": "テキストファイルの削除は許可"
+    },
+    {
+      "matcher": ".*",
+      "args": "/etc/",
+      "decision": "block",
+      "reason": "/etc/ディレクトリへのアクセスをブロック"
+    },
+    {
+      "matcher": "Write|Edit|MultiEdit",
+      "args": "\\.(js|ts|jsx|tsx)$",
+      "reason": "JavaScriptファイルを編集中"
+    },
+    {
+      "matcher": "WebFetch|WebSearch",
+      "reason": "Web検索を実行中"
+    },
+    {
+      "matcher": "mcp__.*",
+      "decision": "block",
+      "reason": "MCPツールの使用をブロック"
+    }
+  ]
+}

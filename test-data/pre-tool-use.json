@@ -1,9 +1,0 @@
-{
-  "session_id": "test-session-123",
-  "transcript_path": "/tmp/transcript.jsonl",
-  "hook_event_name": "PreToolUse",
-  "tool_name": "Bash",
-  "tool_input": {
-    "command": "rm -rf /tmp/test"
-  }
-}

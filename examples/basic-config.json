@@ -1,0 +1,30 @@
+{
+  "preToolUse": [
+    {
+      "matcher": "Bash",
+      "command": "rm",
+      "args": "-rf",
+      "decision": "block",
+      "reason": "危険なrmコマンドの実行をブロック"
+    },
+    {
+      "matcher": "Bash",
+      "command": "git",
+      "args": "push.*--force",
+      "decision": "block",
+      "reason": "force pushは危険な操作のためブロック"
+    },
+    {
+      "matcher": "Write|Edit",
+      "args": "\\.env",
+      "decision": "block",
+      "reason": ".envファイルへの書き込みをブロック"
+    },
+    {
+      "matcher": "Bash",
+      "command": "npm",
+      "args": "install",
+      "reason": "npm installを実行しています"
+    }
+  ]
+}

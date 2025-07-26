@@ -1,0 +1,39 @@
+{
+  "preToolUse": [
+    {
+      "matcher": "Bash",
+      "command": "curl|wget",
+      "decision": "block",
+      "reason": "外部からのダウンロードをブロック"
+    },
+    {
+      "matcher": "Bash",
+      "command": "ssh",
+      "decision": "block",
+      "reason": "SSHアクセスをブロック"
+    },
+    {
+      "matcher": "Write|Edit",
+      "args": "\\.(env|pem|key|crt|pfx)$",
+      "decision": "block",
+      "reason": "機密ファイルへの書き込みをブロック"
+    },
+    {
+      "matcher": "Read",
+      "args": "\\.(env|pem|key)$",
+      "reason": "機密ファイルを読み取り中 - 注意"
+    },
+    {
+      "matcher": "Bash",
+      "command": "docker",
+      "args": "run.*--privileged",
+      "decision": "block",
+      "reason": "特権コンテナの実行をブロック"
+    },
+    {
+      "matcher": ".*",
+      "args": "password|secret|token|api_key",
+      "reason": "機密情報を含む可能性のある操作を実行中"
+    }
+  ]
+}
