@@ -1,4 +1,4 @@
-import { processHook } from "./hook-handler";
+import { processHook } from "./hookHandler";
 import { debugLog, dumpToTmp } from "./utils/debug";
 import { validateHookInput } from "./utils/validate";
 

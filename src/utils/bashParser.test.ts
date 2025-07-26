@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { parseBashCommand } from "./bash-parser";
+import { parseBashCommand } from "./bashParser";
 
 describe("parseBashCommand", () => {
   describe("単一コマンド", () => {

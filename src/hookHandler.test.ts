@@ -1,5 +1,5 @@
 import { test, expect, describe, spyOn } from "bun:test";
-import { processHook } from "./hook-handler";
+import { processHook } from "./hookHandler";
 import * as handlers from "./handlers";
 import type { HookInput } from "./types";
 
@@ -21,12 +21,17 @@ describe("hook処理", () => {
     const spy = spyOn(handlers, "handlePreToolUse");
     spy.mockResolvedValue({});
 
-    // Act
-    await processHook(input);
+    try {
+      // Act
+      await processHook(input);
 
-    // Assert - PreToolUse専用ハンドラーが呼ばれた
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(input);
+      // Assert - PreToolUse専用ハンドラーが呼ばれた
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(input);
+    } finally {
+      // スパイをリストア
+      spy.mockRestore();
+    }
   });
 
   test("PreToolUse以外のhookは空のレスポンスを返す", async () => {

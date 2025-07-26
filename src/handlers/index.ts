@@ -1,1 +1,1 @@
-export { handlePreToolUse } from "./pre-tool-use";
+export { handlePreToolUse } from "./preToolUse";

@@ -1,6 +1,6 @@
 import type { PreToolUseInput, PreToolUseResponse } from "../types";
 import { matchTool } from "../utils/matcher";
-import { parseBashCommand } from "../utils/bash-parser";
+import { parseBashCommand } from "../utils/bashParser";
 import { tryCatch } from "../utils/result";
 
 // ルールの型定義

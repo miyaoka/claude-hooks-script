@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { handlePreToolUse, type PreToolUseRule } from "./pre-tool-use";
+import { handlePreToolUse, type PreToolUseRule } from "./preToolUse";
 import type { PreToolUseInput } from "../types";
 
 describe("handlePreToolUse - 優先順位とマッチング", () => {
