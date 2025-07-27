@@ -45,8 +45,8 @@ bun link
 ]
 ```
 
-設定例は[examples/hooks.config.json](examples/hooks.config.json)を参照。
-詳細な設定方法は[docs/config-spec.md](docs/config-spec.md)を参照。
+- 設定例は[examples/hooks.config.json](examples/hooks.config.json)を参照。
+- 詳細な設定方法は[docs/config-spec.md](docs/config-spec.md)を参照。
 
 ### 2. Claude Codeのhooksに設定
 

@@ -209,9 +209,16 @@ WebSearchツールの場合、検索クエリでマッチングを行う：
 
 ## 設定ファイルの読み込み
 
-設定ファイルは以下の優先順位で読み込まれ、全ての設定がマージされる：
+設定ファイルは以下のパスから読み込まれる：
+
+**ユーザー設定**（いずれか1つ、上から優先）:
 
 1. `$CLAUDE_CONFIG_DIR/hooks.config.json`
 2. `$HOME/.config/claude/hooks.config.json`
 3. `$HOME/.claude/hooks.config.json`
-4. `{プロジェクトルート}/.claude/hooks.config.json`
+
+**プロジェクト設定**:
+
+- `{プロジェクトルート}/.claude/hooks.config.json`
+
+ユーザー設定とプロジェクト設定の両方が存在する場合は、それらがマージされる。起動時に設定ファイルの検証が行われ、無効な設定がある場合はエラーメッセージを表示して終了する

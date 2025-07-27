@@ -10,7 +10,7 @@ Claude hooks は、Claude Code のツール使用をインターセプトし、�
 
 ## 設定ファイル
 
-`~/.claude/settings.json` または `.claude/settings.json` に記述
+`{claude設定ディレクトリ}/settings.json` または `.claude/settings.json` に記述
 
 ### 基本構造
 
