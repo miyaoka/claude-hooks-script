@@ -8,6 +8,8 @@
     "claude-hooks": "./src/index.ts"
   },
   "scripts": {
+    "dev": "bun run src/index.ts",
+    "dev:example": "bun run src/index.ts --input examples/input.json --config examples/hooks.config.json",
     "lint": "biome check",
     "test": "bun test",
     "test:coverage": "bun test --coverage",

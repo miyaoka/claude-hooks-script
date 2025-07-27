@@ -1,0 +1,23 @@
+Usage: bunx @miyaoka/claude-hooks [options]
+
+Options:
+  -i, --input <file>   Input file or "-" for stdin (default: examples/input.json)
+  -c, --config <file>  Config file (default: search standard paths)
+  -d, --debug          Enable debug mode
+  -h, --help           Show help
+
+Examples:
+  # Claude Codeがhookとして呼び出す（本番環境、パイプ経由）
+  echo '{"hook_event_name": "PreToolUse", ...}' | bunx @miyaoka/claude-hooks
+  
+  # 開発確認用：デフォルトのサンプル入力を使用
+  bunx @miyaoka/claude-hooks
+  
+  # 開発確認用：カスタム入力ファイルを指定
+  bunx @miyaoka/claude-hooks --input custom-input.json
+  
+  # 開発確認用：標準入力から読み込み
+  echo '{"hook_event_name": "PreToolUse", ...}' | bunx @miyaoka/claude-hooks --input -
+  
+  # 開発確認用：カスタム設定ファイルを指定
+  bunx @miyaoka/claude-hooks --config examples/hooks.config.json

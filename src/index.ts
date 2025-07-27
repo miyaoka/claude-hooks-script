@@ -61,56 +61,15 @@ const { values } = parseArgs({
 
 // ヘルプ表示
 if (values.help) {
-  console.log(`Usage: bunx @miyaoka/claude-hooks [options] [json-file]
-
-Options:
-  -d, --debug  Enable debug mode
-  -t, --test   Run test mode with sample input
-  -h, --help   Show help
-
-Examples:
-  # Claude Codeがhookとして呼び出す（本番環境、パイプ経由）
-  echo '{"type": "PreToolUse", ...}' | bunx @miyaoka/claude-hooks
-  
-  # 開発確認用：ファイル直接指定
-  bunx @miyaoka/claude-hooks test-input.json
-  
-  # 開発確認用：テストモード
-  bunx @miyaoka/claude-hooks --test`);
+  const helpText = await Bun.file(
+    new URL("./messages/help.txt", import.meta.url).pathname,
+  ).text();
+  console.log(helpText);
   process.exit(0);
 }
 
 // デバッグモードを初期化（環境変数とCLI引数を考慮）
 initDebugMode(values.debug ?? false);
-
-// 設定ファイルを読み込む
-let config: HookConfig;
-if (values.config) {
-  // --configが指定された場合
-  try {
-    const configContent = await Bun.file(values.config).text();
-    console.log(`Config file: ${values.config}`);
-    console.log(configContent);
-    config = JSON.parse(configContent);
-  } catch (error) {
-    console.error(`Error reading config file: ${values.config}`);
-    console.error(error);
-    process.exit(1);
-  }
-} else {
-  // デフォルトの設定読み込み
-  config = loadConfig(process.cwd());
-  if (config.length === 0) {
-    console.error("Error: No valid configuration found");
-    console.error("Searched paths:");
-    console.error("- $CLAUDE_CONFIG_DIR/hooks.config.json");
-    console.error("- $HOME/.config/claude/hooks.config.json");
-    console.error("- $HOME/.claude/hooks.config.json");
-    console.error("- {project}/.claude/hooks.config.json");
-    console.error("\nUse --config to specify a config file explicitly");
-    process.exit(1);
-  }
-}
 
 // 入力を取得
 let input: string;
@@ -152,6 +111,32 @@ if (stdinInput !== null) {
     console.error(
       `Please ensure the file exists or provide input via --input option`,
     );
+    process.exit(1);
+  }
+}
+
+// 設定ファイルを読み込む
+let config: HookConfig;
+if (values.config) {
+  // --configが指定された場合
+  try {
+    const configContent = await Bun.file(values.config).text();
+    console.log(`Config file: ${values.config}`);
+    console.log(configContent);
+    config = JSON.parse(configContent);
+  } catch (error) {
+    console.error(`Error reading config file: ${values.config}`);
+    console.error(error);
+    process.exit(1);
+  }
+} else {
+  // デフォルトの設定読み込み
+  config = loadConfig(process.cwd());
+  if (config.length === 0) {
+    const noConfigError = await Bun.file(
+      new URL("./messages/no-config-error.txt", import.meta.url).pathname,
+    ).text();
+    console.error(noConfigError);
     process.exit(1);
   }
 }

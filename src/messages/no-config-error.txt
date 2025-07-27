@@ -1,0 +1,8 @@
+Error: No valid configuration found
+Searched paths:
+- $CLAUDE_CONFIG_DIR/hooks.config.json
+- $HOME/.config/claude/hooks.config.json
+- $HOME/.claude/hooks.config.json
+- {project}/.claude/hooks.config.json
+
+Use --config to specify a config file explicitly

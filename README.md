@@ -108,6 +108,15 @@ tail -f /tmp/claude-hook-debug.log
 # 依存関係をインストール
 bun install
 
+# 開発時の実行（デフォルト入力）
+bun run dev
+
+# 開発時の実行（サンプル設定付き）
+bun run dev:example
+
+# カスタム入力/設定での実行
+bun run dev -- --input my-input.json --config my-config.json
+
 # lint
 bun run lint --fix
 
