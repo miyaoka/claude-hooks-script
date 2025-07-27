@@ -18,6 +18,7 @@
     "event": "preToolUse",
     "tool": "Bash",
     "command": "curl",
+    "decision": "block",
     "reason": "curlの代わりにWebFetchツールを使用してください"
   },
   {
@@ -28,16 +29,17 @@
   },
   {
     "event": "preToolUse",
-    "tool": "WebFetch",
-    "domain": "localhost|127\\.0\\.0\\.1",
-    "decision": "block",
-    "reason": "ローカルホストへのアクセスは禁止"
+    "tool": "Bash",
+    "command": "pnpm",
+    "decision": "approve",
+    "reason": "pnpmコマンドはデフォルトで使用許可"
   },
   {
     "event": "preToolUse",
-    "tool": "WebSearch",
-    "query": "password|api.?key|secret",
+    "tool": "Bash",
+    "command": "pnpm",
+    "args": "^(run )?dev",
     "decision": "block",
-    "reason": "機密情報の検索は禁止"
+    "reason": "pnpm run devはclaudeは確認できないので使用不可"
   }
 ]

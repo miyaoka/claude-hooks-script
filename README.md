@@ -29,7 +29,7 @@ bun link
 
 まず、hookの動作を制御する設定ファイルを作成する。以下のいずれかの場所に`hooks.config.json`を配置：
 
-- `~/.claude/hooks.config.json`（ユーザー共通設定）
+- `{claudeの設定ディレクトリ}/hooks.config.json`（ユーザー共通設定）
 - `{プロジェクトルート}/.claude/hooks.config.json`（プロジェクト固有設定）
 
 ```json
@@ -45,18 +45,12 @@ bun link
 ]
 ```
 
-完全な設定例は[examples/hooks.config.json](examples/hooks.config.json)を参照。
+設定例は[examples/hooks.config.json](examples/hooks.config.json)を参照。
 詳細な設定方法は[docs/config-spec.md](docs/config-spec.md)を参照。
-
-設定ファイルが正しく読み込まれるか確認するには：
-
-```bash
-bunx @miyaoka/claude-hooks --test
-```
 
 ### 2. Claude Codeのhooksに設定
 
-Claude Code の設定ファイル（`~/.claude/settings.json`または`.claude/settings.json`）に以下のように記述：
+Claude Code の設定ファイル（`{claude設定ディレクトリ}/settings.json`または`.claude/settings.json`）に以下のように記述：
 
 ```json
 {
@@ -76,7 +70,7 @@ Claude Code の設定ファイル（`~/.claude/settings.json`または`.claude/s
 }
 ```
 
-この設定により、Claude Code がツールを実行しようとする際に、自動的にこのスクリプトが呼び出される。スクリプトは標準入力経由でツール実行情報を受け取り、設定ファイルのルールに基づいて実行を許可またはブロックする。
+この設定により、Claude Code がツールを実行しようとする際に自動的にこのスクリプトが呼び出される。スクリプトは標準入力経由でツール実行情報を受け取り、設定ファイルのルールに基づいて実行を許可またはブロックする。
 
 ## 動作確認（推奨）
 
