@@ -12,22 +12,15 @@ export function isDebugMode(): boolean {
   return debugMode;
 }
 
-// 環境変数とCLI引数の両方を考慮してデバッグモードを初期化
-export function initDebugMode(cliDebug?: string | boolean): void {
-  const envDebug = process.env.CLAUDE_HOOK_DEBUG === "true";
+// CLI引数でデバッグモードを初期化
+export function initDebugMode(cliDebug: string | boolean): void {
+  debugMode = true;
 
-  if (cliDebug === true) {
-    // -d のみ指定された場合
-    debugMode = true;
-    // デフォルトのログファイルパスを使用
-  } else if (typeof cliDebug === "string") {
+  if (typeof cliDebug === "string") {
     // -d <file> で指定された場合
-    debugMode = true;
     debugLogPath = cliDebug;
-  } else {
-    // 環境変数のみをチェック
-    debugMode = envDebug;
   }
+  // -d のみの場合はデフォルトのログファイルパスを使用
 }
 
 export async function debugLog(message: string): Promise<void> {

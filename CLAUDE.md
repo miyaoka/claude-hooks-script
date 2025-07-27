@@ -74,8 +74,9 @@ TDD アプローチに従い、まずテストを書いてから実装する
 
 ### デバッグ機能
 
-- `/tmp/claude-hooks-debug.log`: デバッグログ（デバッグモード時のみ）
-- `-d, --debug`オプションまたは環境変数`CLAUDE_HOOK_DEBUG=true`でデバッグモード有効化
+- `-d, --debug [file]`オプションでデバッグモード有効化
+- デフォルトログファイル: `/tmp/claude-hooks-debug.log`
+- カスタムログファイル指定可能: `-d custom.log`
 
 ### 設定ファイル
 
