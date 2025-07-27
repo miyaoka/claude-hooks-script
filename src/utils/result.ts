@@ -9,3 +9,13 @@ export function tryCatch<T, E = Error>(fn: () => T): Result<T, E> {
     return { error: error as E };
   }
 }
+
+export async function tryCatchAsync<T, E = Error>(
+  fn: () => Promise<T>,
+): Promise<Result<T, E>> {
+  try {
+    return { value: await fn() };
+  } catch (error) {
+    return { error: error as E };
+  }
+}

@@ -5,6 +5,7 @@ import { loadConfig } from "./config";
 import { main } from "./main";
 import type { HookConfig } from "./types/userConfig";
 import { initDebugMode } from "./utils/debug";
+import { tryCatchAsync } from "./utils/result";
 
 /**
  * Claude Code hook スクリプトのエントリーポイント
@@ -89,46 +90,58 @@ if (stdinInput !== null) {
     );
     process.exit(1);
   }
-  try {
-    input = await Bun.file(values.input).text();
-    console.log(`Input file: ${values.input}`);
-    console.log(input);
-  } catch (error) {
+  const inputResult = await tryCatchAsync(() => {
+    if (!values.input) {
+      throw new Error("Input file path is undefined");
+    }
+    return Bun.file(values.input).text();
+  });
+  if (!inputResult.value) {
     console.error(`Error reading input file: ${values.input}`);
-    console.error(error);
+    console.error(inputResult.error);
     process.exit(1);
   }
+  input = inputResult.value;
+  console.log(`Input file: ${values.input}`);
+  console.log(input);
 } else {
   // デフォルトのサンプル入力を使用
   const defaultInputPath = new URL("../examples/input.json", import.meta.url)
     .pathname;
-  try {
-    input = await Bun.file(defaultInputPath).text();
-    console.log(`Using default input: ${defaultInputPath}`);
-    console.log(input);
-  } catch (_error) {
+  const defaultInputResult = await tryCatchAsync(() =>
+    Bun.file(defaultInputPath).text(),
+  );
+  if (!defaultInputResult.value) {
     console.error(`Error reading default input file: ${defaultInputPath}`);
     console.error(
       `Please ensure the file exists or provide input via --input option`,
     );
     process.exit(1);
   }
+  input = defaultInputResult.value;
+  console.log(`Using default input: ${defaultInputPath}`);
+  console.log(input);
 }
 
 // 設定ファイルを読み込む
 let config: HookConfig;
 if (values.config) {
   // --configが指定された場合
-  try {
+  const configResult = await tryCatchAsync(async () => {
+    if (!values.config) {
+      throw new Error("Config file path is undefined");
+    }
     const configContent = await Bun.file(values.config).text();
     console.log(`Config file: ${values.config}`);
     console.log(configContent);
-    config = JSON.parse(configContent);
-  } catch (error) {
+    return JSON.parse(configContent);
+  });
+  if (!configResult.value) {
     console.error(`Error reading config file: ${values.config}`);
-    console.error(error);
+    console.error(configResult.error);
     process.exit(1);
   }
+  config = configResult.value;
 } else {
   // デフォルトの設定読み込み
   config = loadConfig(process.cwd());
@@ -142,9 +155,8 @@ if (values.config) {
 }
 
 // メイン関数を実行
-try {
-  await main(input, config);
-} catch (error) {
-  console.error("Error:", error);
+const mainResult = await tryCatchAsync(() => main(input, config));
+if (!mainResult.value) {
+  console.error("Error:", mainResult.error);
   process.exit(1);
 }
