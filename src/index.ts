@@ -5,6 +5,29 @@ import { loadConfig } from "./config";
 import { main } from "./main";
 import { initDebugMode } from "./utils/debug";
 
+/**
+ * Claude Code hook スクリプトのエントリーポイント
+ *
+ * Claude Codeがツール実行前に呼び出すhookプログラム。
+ * コマンド内容に応じて実行をブロックするなど、Claudeのツール実行を制御する。
+ *
+ * 動作の流れ：
+ * 1. 設定ファイル（hooks.config.json）からルールを読み込む
+ * 2. Claude Codeからツール実行情報を受け取る
+ * 3. ルールに基づいて許可/ブロックを判断
+ * 4. 結果をconsole.log（JSON形式）で返してClaudeのツール実行を制御
+ *
+ * 実行モード：
+ *
+ * ■ 本番（Claude Codeから自動実行）
+ *   Claude Code → パイプ → 本スクリプト
+ *   例: echo '{"hook_event_name": "PreToolUse", ...}' | bunx @miyaoka/claude-hooks
+ *
+ * ■ テスト（開発時の動作確認）
+ *   - ファイルから: bunx @miyaoka/claude-hooks test-input.json
+ *   - 組み込みデータ: bunx @miyaoka/claude-hooks --test
+ */
+
 // 最初に設定を読み込む
 const config = loadConfig(process.cwd());
 if (config.length === 0) {
@@ -49,13 +72,13 @@ Options:
   -h, --help   Show help
 
 Examples:
-  # As Claude Code hook (via pipe)
+  # Claude Codeがhookとして呼び出す（本番環境、パイプ経由）
   echo '{"type": "PreToolUse", ...}' | bunx @miyaoka/claude-hooks
   
-  # Direct file input
+  # 開発確認用：ファイル直接指定
   bunx @miyaoka/claude-hooks test-input.json
   
-  # Test mode
+  # 開発確認用：テストモード
   bunx @miyaoka/claude-hooks --test`);
   process.exit(0);
 }
