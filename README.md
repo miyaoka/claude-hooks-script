@@ -111,8 +111,16 @@ bun run typecheck
 
 ### プロジェクト構成
 
-- `src/index.ts`: エントリーポイント
-- `src/main.ts`: メインロジック
-- `src/handlers/`: 各hookタイプのハンドラー
-- `src/config/`: 設定ファイルの読み込み・検証
-- `docs/`: ドキュメント
+```
+src/
+├── index.ts          # エントリーポイント（標準入力からJSONを受け取る）
+├── main.ts           # メインロジック（JSON解析、検証、hook処理）
+├── core/             # Hook処理の中核となる検証とルーティング機能
+├── cli/              # コマンドライン引数解析、入力取得、設定ファイル処理
+├── config/           # 設定ファイルの読み込み、検証、パス解決
+├── handlers/         # 各種Hookの処理実装。preToolUse配下にツール別ハンドラー
+├── parsers/          # コマンド文字列の解析処理
+├── types/            # TypeScript型定義。hook/配下にhook関連、userConfig.tsに設定型
+├── utils/            # 共通ユーティリティ（デバッグ、Result型、マッチング処理）
+└── messages/         # ユーザー向けメッセージテンプレート
+```

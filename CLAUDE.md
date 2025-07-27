@@ -12,39 +12,21 @@ Claude Code のツール使用をインターセプトし、カスタムロジ�
 - Bun (ランタイム・テストランナー)
 - TypeScript
 
-## アーキテクチャ
+## プロジェクト構成
 
-### コア
-
-- `src/index.ts`: エントリーポイント（標準入力からJSONを受け取る）
-- `src/main.ts`: メインロジック（JSON解析、検証、hook処理）
-- `src/core/hookInputHandler.ts`: Hook入力のルーティング
-- `src/core/hookInputValidator.ts`: Hook入力の検証
-
-### ハンドラー
-
-- `src/handlers/preToolUse.ts`: PreToolUseフックのメインハンドラー
-- `src/handlers/preToolUse/bash.ts`: Bashツール専用のハンドラー
-
-### パーサー
-
-- `src/parsers/bashParser.ts`: Bashコマンドの解析
-
-### 型定義
-
-- `src/types/hook/`: Hook関連の型定義
-  - `input/`: 各種Hook入力型（PreToolUse, PostToolUse等）
-  - `response/`: Hook応答型
-- `src/types/userConfig.ts`: ユーザー設定の型定義
-
-### ユーティリティ
-
-- `src/utils/debug.ts`: デバッグ出力（/tmpへのダンプ）
-- `src/utils/result.ts`: Result型（エラーハンドリング）
-
-### ドキュメント
-
-- `docs/claude-hooks-spec.md`: Claude hooks 仕様のドキュメント
+```
+src/
+├── index.ts          # エントリーポイント（標準入力からJSONを受け取る）
+├── main.ts           # メインロジック（JSON解析、検証、hook処理）
+├── core/             # Hook処理の中核となる検証とルーティング機能
+├── cli/              # コマンドライン引数解析、入力取得、設定ファイル処理
+├── config/           # 設定ファイルの読み込み、検証、パス解決
+├── handlers/         # 各種Hookの処理実装。preToolUse配下にツール別ハンドラー
+├── parsers/          # コマンド文字列の解析処理
+├── types/            # TypeScript型定義。hook/配下にhook関連、userConfig.tsに設定型
+├── utils/            # 共通ユーティリティ（デバッグ、Result型、マッチング処理）
+└── messages/         # ユーザー向けメッセージテンプレート
+```
 
 ## 検証コマンド
 
