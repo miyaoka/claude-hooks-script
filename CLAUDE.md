@@ -74,19 +74,24 @@ TDD アプローチに従い、まずテストを書いてから実装する
 
 ### デバッグ機能
 
-- `/tmp/claude-hook-debug.log`: デバッグログ（デバッグモード時のみ）
+- `/tmp/claude-hooks-debug.log`: デバッグログ（デバッグモード時のみ）
 - `-d, --debug`オプションまたは環境変数`CLAUDE_HOOK_DEBUG=true`でデバッグモード有効化
 
 ### 設定ファイル
 
-設定ファイルは以下の優先順位で読み込まれる：
+設定ファイルは以下のパスから読み込まれる：
+
+**ユーザー設定**（いずれか1つ、上から優先）:
 
 1. `$CLAUDE_CONFIG_DIR/hooks.config.json`
 2. `$HOME/.config/claude/hooks.config.json`
 3. `$HOME/.claude/hooks.config.json`
-4. `{プロジェクトルート}/.claude/hooks.config.json`
 
-全ての設定ファイルが読み込まれ、マージされる。起動時に設定ファイルの検証が行われ、無効な設定がある場合はエラーメッセージを表示して終了する
+**プロジェクト設定**:
+
+- `{プロジェクトルート}/.claude/hooks.config.json`
+
+ユーザー設定とプロジェクト設定の両方が存在する場合は、それらがマージされる。起動時に設定ファイルの検証が行われ、無効な設定がある場合はエラーメッセージを表示して終了する
 
 ## Hook Types
 

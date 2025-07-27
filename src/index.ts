@@ -41,7 +41,7 @@ if (values.help) {
 }
 
 // デバッグモードを初期化（環境変数とCLI引数を考慮）
-initDebugMode(values.debug ?? false);
+initDebugMode(values.debug);
 
 // 入力を取得
 const input = await getInput(values.input);

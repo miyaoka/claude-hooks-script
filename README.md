@@ -78,28 +78,16 @@ Claude Code の設定ファイル（`~/.claude/settings.json`または`.claude/s
 
 この設定により、Claude Code がツールを実行しようとする際に、自動的にこのスクリプトが呼び出される。スクリプトは標準入力経由でツール実行情報を受け取り、設定ファイルのルールに基づいて実行を許可またはブロックする。
 
-## 動作確認
+## 動作確認（推奨）
 
-### テストモード
-
-```bash
-# サンプル入力でテスト
-bunx @miyaoka/claude-hooks --test
-
-# デバッグモードで実行
-bunx @miyaoka/claude-hooks --debug --test
-```
-
-### デバッグ
-
-デバッグモードでは以下のファイルに情報が記録される：
+配置したconfigがinputに対して正しく機能しているかターミナルで実行確認できる
 
 ```bash
-# Hook入力のJSONLダンプ
-tail -f /tmp/claude-hook-dump.jsonl
+# デフォルトのinput内容でユーザーconfigをテスト
+bunx @miyaoka/claude-hooks
 
-# デバッグログ
-tail -f /tmp/claude-hook-debug.log
+# input内容を指定したい場合
+bunx @miyaoka/claude-hooks -i hooks.input.json
 ```
 
 ## 開発
@@ -108,14 +96,14 @@ tail -f /tmp/claude-hook-debug.log
 # 依存関係をインストール
 bun install
 
-# 開発時の実行（デフォルト入力）
+# 開発時の実行
 bun run dev
 
 # 開発時の実行（サンプル設定付き）
 bun run dev:example
 
 # カスタム入力/設定での実行
-bun run dev -- --input my-input.json --config my-config.json
+bun run dev --input my-input.json --config my-config.json
 
 # lint
 bun run lint --fix

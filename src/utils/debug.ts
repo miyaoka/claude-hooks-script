@@ -2,6 +2,7 @@ import { appendFile } from "node:fs/promises";
 
 // デバッグモードのグローバル状態
 let debugMode = false;
+let debugLogPath = "/tmp/claude-hooks-debug.log";
 
 export function setDebugMode(enabled: boolean): void {
   debugMode = enabled;
@@ -12,9 +13,21 @@ export function isDebugMode(): boolean {
 }
 
 // 環境変数とCLI引数の両方を考慮してデバッグモードを初期化
-export function initDebugMode(cliDebug: boolean): void {
+export function initDebugMode(cliDebug?: string | boolean): void {
   const envDebug = process.env.CLAUDE_HOOK_DEBUG === "true";
-  setDebugMode(cliDebug || envDebug);
+
+  if (cliDebug === true) {
+    // -d のみ指定された場合
+    debugMode = true;
+    // デフォルトのログファイルパスを使用
+  } else if (typeof cliDebug === "string") {
+    // -d <file> で指定された場合
+    debugMode = true;
+    debugLogPath = cliDebug;
+  } else {
+    // 環境変数のみをチェック
+    debugMode = envDebug;
+  }
 }
 
 export async function debugLog(message: string): Promise<void> {
@@ -30,5 +43,5 @@ export async function debugLog(message: string): Promise<void> {
     hour12: false,
   });
   const logLine = `[${timestamp}] ${message}\n`;
-  await appendFile("/tmp/claude-hook-debug.log", logLine);
+  await appendFile(debugLogPath, logLine);
 }

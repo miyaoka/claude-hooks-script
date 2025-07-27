@@ -3,7 +3,7 @@ Usage: bunx @miyaoka/claude-hooks [options]
 Options:
   -i, --input <file>   Input file or "-" for stdin (default: examples/input.json)
   -c, --config <file>  Config file (default: search standard paths)
-  -d, --debug          Enable debug mode
+  -d, --debug [file]   Enable debug mode with optional log file (default: /tmp/claude-hooks-debug.log)
   -h, --help           Show help
 
 Examples:
