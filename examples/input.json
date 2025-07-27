@@ -1,0 +1,10 @@
+{
+  "session_id": "example-session",
+  "transcript_path": "/tmp/example-transcript.json",
+  "cwd": "/home/user/project",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "rm -rf ~/"
+  }
+}

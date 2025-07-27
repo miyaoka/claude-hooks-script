@@ -3,6 +3,7 @@
 import { parseArgs } from "node:util";
 import { loadConfig } from "./config";
 import { main } from "./main";
+import type { HookConfig } from "./types/userConfig";
 import { initDebugMode } from "./utils/debug";
 
 /**
@@ -28,16 +29,11 @@ import { initDebugMode } from "./utils/debug";
  *   - 組み込みデータ: bunx @miyaoka/claude-hooks --test
  */
 
-// 最初に設定を読み込む
-const config = loadConfig(process.cwd());
-if (config.length === 0) {
-  console.error("Error: No valid configuration found");
-  process.exit(1);
-}
+// 設定を読み込む前に引数をパースする必要があるので、この部分は後で処理する
 
 async function readStdin(): Promise<string | null> {
-  // 標準入力がTTY（端末）の場合は、パイプされていない
-  if (process.stdin.isTTY) {
+  // 標準入力がTTY（端末）の場合、またはisTTYがundefinedの場合は、パイプされていない
+  if (process.stdin.isTTY !== false) {
     return null;
   }
 
@@ -51,15 +47,16 @@ async function readStdin(): Promise<string | null> {
 }
 
 // コマンドライン引数をパース
-const { values, positionals } = parseArgs({
+const { values } = parseArgs({
   args: Bun.argv.slice(2),
   options: {
     debug: { type: "boolean", short: "d" },
     help: { type: "boolean", short: "h" },
-    test: { type: "boolean", short: "t" },
+    input: { type: "string", short: "i" },
+    config: { type: "string", short: "c" },
   } as const,
   strict: true,
-  allowPositionals: true,
+  allowPositionals: false,
 });
 
 // ヘルプ表示
@@ -86,57 +83,81 @@ Examples:
 // デバッグモードを初期化（環境変数とCLI引数を考慮）
 initDebugMode(values.debug ?? false);
 
-// テストモード
-if (values.test) {
-  const testInput = JSON.stringify(
-    {
-      session_id: "test-session",
-      transcript_path: "/tmp/test-transcript.json",
-      cwd: process.cwd(),
-      hook_event_name: "PreToolUse",
-      tool_name: "Bash",
-      tool_input: {
-        command: "echo 'hello' && cd ../../ && rm -rf ~/",
-      },
-    },
-    null,
-    2,
-  );
-  console.log("TestInput:", testInput);
-
-  await main(testInput, config);
-  process.exit(0);
-}
-
-// ファイルから読み込み
-if (positionals.length > 0) {
-  const filePath = positionals[0];
-  if (!filePath) {
-    console.error("File path is required");
-    process.exit(1);
-  }
+// 設定ファイルを読み込む
+let config: HookConfig;
+if (values.config) {
+  // --configが指定された場合
   try {
-    const fileContent = await Bun.file(filePath).text();
-    await main(fileContent, config);
+    const configContent = await Bun.file(values.config).text();
+    console.log(`Config file: ${values.config}`);
+    console.log(configContent);
+    config = JSON.parse(configContent);
   } catch (error) {
-    console.error(`Error reading file: ${filePath}`);
+    console.error(`Error reading config file: ${values.config}`);
     console.error(error);
     process.exit(1);
   }
-  process.exit(0);
-}
-
-// 標準入力から読み取る必要がある場合のみ読み取る
-// （help/test/fileのいずれも該当しない場合）
-try {
-  const input = await readStdin();
-
-  if (input === null) {
-    console.error("No input provided. Use --help for usage information.");
+} else {
+  // デフォルトの設定読み込み
+  config = loadConfig(process.cwd());
+  if (config.length === 0) {
+    console.error("Error: No valid configuration found");
+    console.error("Searched paths:");
+    console.error("- $CLAUDE_CONFIG_DIR/hooks.config.json");
+    console.error("- $HOME/.config/claude/hooks.config.json");
+    console.error("- $HOME/.claude/hooks.config.json");
+    console.error("- {project}/.claude/hooks.config.json");
+    console.error("\nUse --config to specify a config file explicitly");
     process.exit(1);
   }
+}
 
-  // メイン関数を実行
+// 入力を取得
+let input: string;
+
+// 標準入力があるかチェック
+const stdinInput = await readStdin();
+
+if (stdinInput !== null) {
+  // 標準入力がある場合（本番環境）
+  input = stdinInput;
+} else if (values.input) {
+  // --inputが指定された場合
+  if (values.input === "-") {
+    // 明示的に標準入力を指定
+    console.error(
+      "No input provided via stdin. Use --help for usage information.",
+    );
+    process.exit(1);
+  }
+  try {
+    input = await Bun.file(values.input).text();
+    console.log(`Input file: ${values.input}`);
+    console.log(input);
+  } catch (error) {
+    console.error(`Error reading input file: ${values.input}`);
+    console.error(error);
+    process.exit(1);
+  }
+} else {
+  // デフォルトのサンプル入力を使用
+  const defaultInputPath = new URL("../examples/input.json", import.meta.url)
+    .pathname;
+  try {
+    input = await Bun.file(defaultInputPath).text();
+    console.log(`Using default input: ${defaultInputPath}`);
+    console.log(input);
+  } catch (_error) {
+    console.error(`Error reading default input file: ${defaultInputPath}`);
+    console.error(
+      `Please ensure the file exists or provide input via --input option`,
+    );
+    process.exit(1);
+  }
+}
+
+// メイン関数を実行
+try {
   await main(input, config);
 } catch (error) {
   console.error("Error:", error);
