@@ -9,15 +9,16 @@ Claude Code がツールを実行する際に呼び出される hook スクリ�
 - WebSearchのクエリ制御
 - 設定ファイルによる柔軟なルール定義
 
+## 前提条件
+
+- [Bun](https://bun.sh/) がインストールされていること
+
 ## インストール
 
 ```bash
 # リポジトリをクローン
 git clone https://github.com/miyaoka/claude-hooks-script.git
 cd claude-hooks-script
-
-# ツールをインストール
-mise install
 
 # ローカルでリンク （bunxで実行できるようにするため）
 bun link
@@ -45,8 +46,8 @@ bun link
 ]
 ```
 
-- 設定例は[examples/hooks.config.json](examples/hooks.config.json)を参照。
-- 詳細な設定方法は[docs/config-spec.md](docs/config-spec.md)を参照。
+- 設定例は [examples/hooks.config.json](examples/hooks.config.json) を参照。
+- 詳細な設定方法は [docs/config-spec.md](docs/config-spec.md) を参照。
 
 ### 2. Claude Codeのhooksに設定
 
