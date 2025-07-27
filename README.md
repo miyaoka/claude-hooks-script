@@ -13,8 +13,8 @@ Claude Code 用の hook スクリプト。ツール実行前に検証・制御�
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/miyaoka/claude-hook-script.git
-cd claude-hook-script
+git clone https://github.com/miyaoka/claude-hooks-script.git
+cd claude-hooks-script
 
 # ツールをインストール
 mise install
