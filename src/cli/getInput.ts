@@ -45,7 +45,7 @@ export async function getInput(inputOption?: string): Promise<string> {
     return inputResult.value;
   }
 
-  // デフォルトのサンプル入力を使用
+  // デフォルトのサンプル入力を使用（テストモードまたは引数なし実行）
   const defaultInputPath = new URL("../../examples/input.json", import.meta.url)
     .pathname;
   const defaultInputResult = await tryCatchAsync(() =>

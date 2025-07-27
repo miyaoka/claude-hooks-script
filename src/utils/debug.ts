@@ -2,6 +2,7 @@ import { appendFile } from "node:fs/promises";
 
 // デバッグモードのグローバル状態
 let debugMode = false;
+// -d のみの場合はデフォルトのログファイルパスを使用
 let debugLogPath = "/tmp/claude-hooks-debug.log";
 
 export function setDebugMode(enabled: boolean): void {
@@ -16,11 +17,10 @@ export function isDebugMode(): boolean {
 export function initDebugMode(cliDebug: string | boolean): void {
   debugMode = true;
 
+  // -d <file> で指定された場合
   if (typeof cliDebug === "string") {
-    // -d <file> で指定された場合
     debugLogPath = cliDebug;
   }
-  // -d のみの場合はデフォルトのログファイルパスを使用
 }
 
 export async function debugLog(message: string): Promise<void> {

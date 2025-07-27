@@ -1,4 +1,14 @@
-import { parseArgs as nodeParseArgs } from "node:util";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { program } from "@commander-js/extra-typings";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// パッケージのバージョンを取得
+const packageJson = JSON.parse(
+  readFileSync(join(__dirname, "../../package.json"), "utf-8"),
+);
 
 export type ParsedArgs = {
   debug?: string | boolean;
@@ -8,48 +18,21 @@ export type ParsedArgs = {
 };
 
 export function parseArgs(): ParsedArgs {
-  const args = Bun.argv.slice(2);
+  program
+    .version(packageJson.version)
+    .description("Claude Code hook script for intercepting tool usage")
+    .option("-d, --debug [file]", "Enable debug mode with optional log file")
+    .option("-i, --input <file>", "Input file path")
+    .option("-c, --config <file>", "Configuration file path")
+    .option("-h, --help", "Display help message")
+    .parse(Bun.argv);
 
-  // -d の特別処理のため、手動でチェック
-  let debugValue: string | boolean | undefined;
-  const debugIndex = args.findIndex((arg) => arg === "-d" || arg === "--debug");
+  const options = program.opts();
 
-  if (debugIndex !== -1) {
-    const nextArg = args[debugIndex + 1];
-    // 次の引数がオプションでなく、存在する場合はファイルパスとして扱う
-    if (nextArg && !nextArg.startsWith("-")) {
-      debugValue = nextArg;
-      // 消費した引数を削除
-      args.splice(debugIndex, 2);
-    } else {
-      debugValue = true;
-      // フラグのみ削除
-      args.splice(debugIndex, 1);
-    }
-  }
-
-  // 残りの引数をparseArgs
-  const { values } = nodeParseArgs({
-    args,
-    options: {
-      help: { type: "boolean", short: "h" },
-      input: { type: "string", short: "i" },
-      config: { type: "string", short: "c" },
-    } as const,
-    strict: true,
-    allowPositionals: false,
-  });
-
-  return {
-    ...values,
-    debug: debugValue,
-  };
+  return options;
 }
 
 export async function showHelpAndExit(): Promise<never> {
-  const helpText = await Bun.file(
-    new URL("../messages/help.txt", import.meta.url).pathname,
-  ).text();
-  console.log(helpText);
-  process.exit(0);
+  // Commander.jsのヘルプを表示
+  program.help();
 }
