@@ -4,7 +4,7 @@ Claude Code 用の hook スクリプトを実装するプロジェクト
 
 ## 概要
 
-このプロジェクトは`bunx @miyaoka/claude-hooks`で実行可能な Claude Code 用の hook スクリプトを提供する
+このプロジェクトは`bunx github:miyaoka/claude-hooks-script`で実行可能な Claude Code 用の hook スクリプトを提供する
 Claude Code のツール使用をインターセプトし、カスタムロジックを追加できる
 
 ## 技術スタック
@@ -87,14 +87,14 @@ TDD アプローチに従い、まずテストを書いてから実装する
 
 ```sh
 # Claude Code hookとして（標準入力経由）
-echo '{...}' | bunx @miyaoka/claude-hooks
+echo '{...}' | bunx github:miyaoka/claude-hooks-script
 
 # ファイルから入力
-bunx @miyaoka/claude-hooks test-input.json
+bunx github:miyaoka/claude-hooks-script test-input.json
 
 # テストモード（サンプル入力で動作確認）
-bunx @miyaoka/claude-hooks --test
+bunx github:miyaoka/claude-hooks-script --test
 
 # デバッグモード有効
-bunx @miyaoka/claude-hooks --debug
+bunx github:miyaoka/claude-hooks-script --debug
 ```

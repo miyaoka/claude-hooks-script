@@ -1,36 +1,39 @@
 # @miyaoka/claude-hooks
 
-Claude Code がツールを実行する際に呼び出される hook スクリプト。Claude Code からの hook 入力を受け取り、設定ファイルのルールに従ってツール実行を制御（許可/ブロック）する。
-
-## 機能
-
-- Bashコマンドの実行制御（コマンド名、引数パターンでのマッチング）
-- WebFetchのURLドメイン制御
-- WebSearchのクエリ制御
-- 設定ファイルによる柔軟なルール定義
+Claude Code がツールを実行する際に呼び出される hook スクリプト。設定ファイルのルールに従ってツール実行を制御（許可/ブロック）する。
 
 ## 前提条件
 
-- [Bun](https://bun.sh/) がインストールされていること
+- [Bun](https://bun.sh/)
 
-## インストール
+## 使い方
 
-```bash
-# リポジトリをクローン
-git clone https://github.com/miyaoka/claude-hooks-script.git
-cd claude-hooks-script
+### Claude Codeのhooksに設定
 
-# ローカルでリンク （bunxで実行できるようにするため）
-bun link
+Claude Code の設定ファイル（`~/.claude/settings.json`または`.claude/settings.json`）に以下を記述：
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bunx github:miyaoka/claude-hooks-script"
+          }
+        ]
+      }
+    ]
+  }
+}
 ```
 
-## 設定方法
+### hook設定ファイルを作成
 
-### 1. hook設定ファイルを作成
+hookの動作を制御する設定ファイルを作成する。以下のいずれかの場所に`hooks.config.json`を配置：
 
-まず、hookの動作を制御する設定ファイルを作成する。以下のいずれかの場所に`hooks.config.json`を配置：
-
-- `{claudeの設定ディレクトリ}/hooks.config.json`（ユーザー共通設定）
+- `~/.claude/hooks.config.json`（ユーザー共通設定）
 - `{プロジェクトルート}/.claude/hooks.config.json`（プロジェクト固有設定）
 
 ```json
@@ -46,43 +49,17 @@ bun link
 ]
 ```
 
-- 設定例は [examples/hooks.config.json](examples/hooks.config.json) を参照。
-- 詳細な設定方法は [docs/config-spec.md](docs/config-spec.md) を参照。
+- 設定例: [examples/hooks.config.json](examples/hooks.config.json)
+- 詳細な設定方法: [docs/config-spec.md](docs/config-spec.md)
 
-### 2. Claude Codeのhooksに設定
-
-Claude Code の設定ファイル（`{claude設定ディレクトリ}/settings.json`または`.claude/settings.json`）に以下のように記述：
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "tool": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bunx @miyaoka/claude-hooks"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-この設定により、Claude Code がツールを実行しようとする際に自動的にこのスクリプトが呼び出される。スクリプトは標準入力経由でツール実行情報を受け取り、設定ファイルのルールに基づいて実行を許可またはブロックする。
-
-### 3. 動作確認（推奨）
-
-配置したconfigがinputに対して正しく機能しているかターミナルで実行確認できる
+### 動作確認
 
 ```bash
 # デフォルトのinput内容でユーザーconfigをテスト
-bunx @miyaoka/claude-hooks
+bunx github:miyaoka/claude-hooks-script
 
 # input内容を指定したい場合
-bunx @miyaoka/claude-hooks -i hooks.input.json
+bunx github:miyaoka/claude-hooks-script -i hooks.input.json
 ```
 
 ## 開発
