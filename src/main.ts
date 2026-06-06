@@ -31,9 +31,8 @@ export async function main(input: string, config: HookConfig): Promise<void> {
 }
 
 /**
- * Hook入力の最小検証
- * Bash以外のhookイベントもこのスクリプトに届く可能性があるので、
- * 共通フィールドのみを検証して後段で振り分ける
+ * PreToolUse Bash 以外の hook event / tool もこのスクリプトに届き得る。
+ * ここでは共通フィールドだけ検証し、dispatch で PreToolUse + Bash 以外は素通しする
  */
 function validateHookInput(input: unknown): input is HookInput {
   if (typeof input !== "object" || input === null || Array.isArray(input)) {
@@ -49,18 +48,25 @@ function validateHookInput(input: unknown): input is HookInput {
 }
 
 /**
- * PreToolUse の Bash 以外は素通し
+ * PreToolUse + Bash のみ checkBashCommand に流す。
+ * それ以外の hook event / tool は空レスポンス `{}` で素通し。
+ * PreToolUse + Bash で tool_input の形が壊れていたら Claude Code 側のスキーマ違反として exit(1)
  */
 function dispatch(input: HookInput, config: HookConfig): HookResponse {
-  if (!isBashInput(input)) return {};
-  return checkBashCommand(input, config);
-}
+  if (input.hook_event_name !== "PreToolUse") return {};
+  if (input.tool_name !== "Bash") return {};
 
-function isBashInput(input: HookInput): input is BashHookInput {
-  if (input.hook_event_name !== "PreToolUse") return false;
-  if (input.tool_name !== "Bash") return false;
   if (typeof input.tool_input !== "object" || input.tool_input === null) {
-    return false;
+    console.error("Invalid Bash hook input: tool_input must be an object");
+    process.exit(1);
   }
-  return typeof input.tool_input.command === "string";
+  const command = (input.tool_input as { command?: unknown }).command;
+  if (typeof command !== "string") {
+    console.error(
+      "Invalid Bash hook input: tool_input.command must be a string",
+    );
+    process.exit(1);
+  }
+
+  return checkBashCommand(input as BashHookInput, config);
 }

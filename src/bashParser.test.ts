@@ -50,6 +50,43 @@ describe("parseBashCommand", () => {
         { command: "rm", args: "-rf ~/" },
       ]);
     });
+
+    it("||で連結", () => {
+      expect(parseBashCommand("echo a || rm -rf /tmp")).toEqual([
+        { command: "echo", args: "a" },
+        { command: "rm", args: "-rf /tmp" },
+      ]);
+    });
+
+    it("&でバックグラウンド実行", () => {
+      expect(parseBashCommand("sleep 0 & rm -rf ~")).toEqual([
+        { command: "sleep", args: "0" },
+        { command: "rm", args: "-rf ~" },
+      ]);
+    });
+  });
+
+  describe("command substitution", () => {
+    it("$(...)の中身も独立コマンドとして抽出", () => {
+      expect(parseBashCommand("echo $(rm -rf ~)")).toEqual([
+        { command: "echo", args: "" },
+        { command: "rm", args: "-rf ~" },
+      ]);
+    });
+
+    it("バッククォートの中身も独立コマンドとして抽出", () => {
+      expect(parseBashCommand("echo `rm -rf ~`")).toEqual([
+        { command: "echo", args: "" },
+        { command: "rm", args: "-rf ~" },
+      ]);
+    });
+
+    it("$(...)と外側コマンドの両方", () => {
+      expect(parseBashCommand("cat $(find /etc -name passwd)")).toEqual([
+        { command: "cat", args: "" },
+        { command: "find", args: "/etc -name passwd" },
+      ]);
+    });
   });
 
   describe("エッジケース", () => {

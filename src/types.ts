@@ -1,5 +1,5 @@
 export type BashRule = {
-  command?: string;
+  command: string;
   args?: string;
   decision?: "approve" | "block";
   reason: string;

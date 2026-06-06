@@ -1,5 +1,5 @@
 import { appendFile } from "node:fs/promises";
-import { loadConfig } from "./config";
+import { loadConfig, validateConfig } from "./config";
 import { tryCatchAsync } from "./result";
 import type { HookConfig } from "./types";
 
@@ -152,8 +152,9 @@ export async function getInput(inputOption?: string): Promise<string> {
       console.error(inputResult.error);
       process.exit(1);
     }
-    console.log(`Input file: ${inputOption}`);
-    console.log(inputResult.value);
+    // hookの本番stdoutは JSON object のみに保つため診断は stderr に流す
+    console.error(`Input file: ${inputOption}`);
+    console.error(inputResult.value);
     return inputResult.value;
   }
 
@@ -179,8 +180,8 @@ export async function getInput(inputOption?: string): Promise<string> {
     );
     process.exit(1);
   }
-  console.log(`Using default input: ${defaultInputPath}`);
-  console.log(defaultInputResult.value);
+  console.error(`Using default input: ${defaultInputPath}`);
+  console.error(defaultInputResult.value);
   return defaultInputResult.value;
 }
 
@@ -189,13 +190,18 @@ export async function getConfig(configOption?: string): Promise<HookConfig> {
   if (configOption) {
     const configResult = await tryCatchAsync(async () => {
       const content = await Bun.file(configOption).text();
-      console.log(`Config file: ${configOption}`);
-      console.log(content);
+      // hookの本番stdoutは JSON object のみに保つため診断は stderr に流す
+      console.error(`Config file: ${configOption}`);
+      console.error(content);
       return JSON.parse(content);
     });
     if (!configResult.value) {
       console.error(`Error reading config file: ${configOption}`);
       console.error(configResult.error);
+      process.exit(1);
+    }
+    if (!validateConfig(configResult.value)) {
+      console.error(`Config validation failed for ${configOption}`);
       process.exit(1);
     }
     return configResult.value;

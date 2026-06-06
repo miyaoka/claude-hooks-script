@@ -1,9 +1,10 @@
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { BashRule, HookConfig } from "./types";
+import type { HookConfig } from "./types";
 
 const CONFIG_FILE = "hooks.config.json";
+const ALLOWED_RULE_KEYS = new Set(["command", "args", "decision", "reason"]);
 
 /**
  * ユーザー設定とプロジェクト設定をマージしてロードする
@@ -41,6 +42,7 @@ export function readConfig(path: string): HookConfig | undefined {
 
 /**
  * HookConfig（BashRule配列）の型ガード
+ * 未知フィールド（event / tool / domain / query 等の旧スキーマ）の混入も拒否する
  */
 export function validateConfig(config: unknown): config is HookConfig {
   if (!Array.isArray(config)) {
@@ -50,31 +52,39 @@ export function validateConfig(config: unknown): config is HookConfig {
 
   let valid = true;
   for (let i = 0; i < config.length; i++) {
-    if (isBashRule(config[i])) continue;
-    console.error(
-      `Config validation error: Invalid rule at index ${i}:`,
-      config[i],
-    );
+    const error = checkBashRule(config[i]);
+    if (error === null) continue;
+    console.error(`Config validation error at index ${i}: ${error}`, config[i]);
     valid = false;
   }
   return valid;
 }
 
-function isBashRule(rule: unknown): rule is BashRule {
-  if (typeof rule !== "object" || rule === null) return false;
-
+function checkBashRule(rule: unknown): string | null {
+  if (typeof rule !== "object" || rule === null || Array.isArray(rule)) {
+    return "rule must be a plain object";
+  }
   const r = rule as Record<string, unknown>;
-  if (typeof r.reason !== "string") return false;
-  if (r.command !== undefined && typeof r.command !== "string") return false;
-  if (r.args !== undefined && typeof r.args !== "string") return false;
+
+  if (typeof r.command !== "string") return "command must be a string";
+  if (typeof r.reason !== "string") return "reason must be a string";
+  if (r.args !== undefined && typeof r.args !== "string") {
+    return "args must be a string when present";
+  }
   if (
     r.decision !== undefined &&
     r.decision !== "block" &&
     r.decision !== "approve"
   ) {
-    return false;
+    return 'decision must be "block" or "approve" when present';
   }
-  return true;
+
+  const unknown = Object.keys(r).filter((k) => !ALLOWED_RULE_KEYS.has(k));
+  if (unknown.length > 0) {
+    return `unknown fields: ${unknown.join(", ")} — may be using old schema; remove event/tool/domain/query`;
+  }
+
+  return null;
 }
 
 /**

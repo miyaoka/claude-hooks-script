@@ -33,7 +33,7 @@ Claude処理開始
 
 ## 各Hookの詳細と使用例
 
-### 1. UserPromptSubmit
+### UserPromptSubmit
 
 **タイミング**: ユーザーがプロンプトを送信した直後、Claudeが処理を開始する前
 
@@ -50,7 +50,7 @@ Claude処理開始
 - 「本番環境のデータを削除して」などの危険な要求をブロック
 - 曖昧なプロンプトに現在のブランチ名や変更内容を自動補完
 
-### 2. PreToolUse
+### PreToolUse
 
 **タイミング**: Claudeがツールを実行しようとする直前
 
@@ -67,7 +67,7 @@ Claude処理開始
 - `ls`や`pwd`などの安全な読み取り専用コマンドを自動承認
 - GitHub APIへの`curl`をブロックし、`gh`コマンドの使用を促す
 
-### 3. PostToolUse
+### PostToolUse
 
 **タイミング**: ツールの実行が完了した後
 
@@ -83,7 +83,7 @@ Claude処理開始
 - 標準エラー出力（stderr）からビルドエラーを検出してClaudeに報告
 - コマンドの実行結果を監査ログとして保存
 
-### 4. Notification
+### Notification
 
 **タイミング**:
 
@@ -100,7 +100,7 @@ Claude処理開始
 - ツール許可要求時にユーザーに通知
 - 60秒アイドル時にユーザーに通知
 
-### 5. Stop / SubagentStop
+### Stop / SubagentStop
 
 **タイミング**:
 
@@ -119,7 +119,7 @@ Claude処理開始
 - テストが失敗している場合は修正を促す
 - 応答完了時にユーザーに通知
 
-### 6. PreCompact
+### PreCompact
 
 **タイミング**: コンテキストが圧縮される前
 

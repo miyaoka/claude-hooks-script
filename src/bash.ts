@@ -15,12 +15,11 @@ export function checkBashCommand(
   input: BashHookInput,
   rules: BashRule[],
 ): HookResponse {
+  const bashCommand = input.tool_input.command;
+  if (!bashCommand) return {};
   if (rules.length === 0) return {};
 
   const normalizedRules = normalizeRules(rules);
-  const bashCommand = input.tool_input.command;
-  if (!bashCommand) return {};
-
   const parsedCommands = parseBashCommand(bashCommand);
   const matchedRules: RuleResult[] = [];
 
@@ -51,7 +50,7 @@ function normalizeRules(rules: BashRule[]): BashRule[] {
     const rule = rules[i];
     if (!rule) continue;
 
-    const key = `${rule.command || ""}:${rule.args || ""}`;
+    const key = `${rule.command}:${rule.args || ""}`;
     if (seen.has(key)) continue;
 
     seen.add(key);

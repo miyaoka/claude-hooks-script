@@ -408,6 +408,87 @@ describe("checkBashCommand", () => {
       });
     });
 
+    it("find / 系のブロック", () => {
+      const result = {
+        decision: "block",
+        reason: "ルート直下のfindは禁止",
+      } as const;
+      const rules: BashRule[] = [
+        {
+          command: "find",
+          args: "(?:^|\\s)[\"']?/[\"']?(?:\\s|$)",
+          ...result,
+        },
+      ];
+
+      // ブロックされるべきケース
+      expect(checkBashCommand(createBashInput("find /"), rules)).toEqual(
+        result,
+      );
+      expect(
+        checkBashCommand(
+          createBashInput("find / -path */node_modules*"),
+          rules,
+        ),
+      ).toEqual(result);
+      expect(checkBashCommand(createBashInput("find -L /"), rules)).toEqual(
+        result,
+      );
+      expect(checkBashCommand(createBashInput("find -H -L /"), rules)).toEqual(
+        result,
+      );
+      expect(checkBashCommand(createBashInput('find "/"'), rules)).toEqual(
+        result,
+      );
+
+      // 素通しすべきケース（具体パス）
+      expect(
+        checkBashCommand(createBashInput("find /Users/me -name foo"), rules),
+      ).toEqual({});
+      expect(
+        checkBashCommand(createBashInput("find /etc -name passwd"), rules),
+      ).toEqual({});
+      expect(
+        checkBashCommand(createBashInput("find . -name foo"), rules),
+      ).toEqual({});
+    });
+
+    it("$(...)に隠したrmもブロックされる", () => {
+      const rules: BashRule[] = [
+        { command: "rm", decision: "block", reason: "rm禁止" },
+      ];
+      expect(
+        checkBashCommand(createBashInput("echo $(rm -rf ~)"), rules),
+      ).toEqual({
+        decision: "block",
+        reason: "rm禁止",
+      });
+    });
+
+    it("バッククォートに隠したrmもブロックされる", () => {
+      const rules: BashRule[] = [
+        { command: "rm", decision: "block", reason: "rm禁止" },
+      ];
+      expect(
+        checkBashCommand(createBashInput("echo `rm -rf ~`"), rules),
+      ).toEqual({
+        decision: "block",
+        reason: "rm禁止",
+      });
+    });
+
+    it("&でバックグラウンド化したrmもブロックされる", () => {
+      const rules: BashRule[] = [
+        { command: "rm", decision: "block", reason: "rm禁止" },
+      ];
+      expect(
+        checkBashCommand(createBashInput("sleep 0 & rm -rf ~"), rules),
+      ).toEqual({
+        decision: "block",
+        reason: "rm禁止",
+      });
+    });
+
     it("rm -rf ~", () => {
       const result = {
         decision: "block",

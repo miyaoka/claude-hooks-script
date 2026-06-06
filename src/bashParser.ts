@@ -3,45 +3,66 @@ export interface ParsedCommand {
   args: string;
 }
 
+const QUOTE_REGEX = /'[^']*'|"[^"]*"/g;
+// $(...) は内側に ) を含まない範囲だけ。ネストは扱わない（限界として受け入れる）
+const SUBSTITUTION_REGEX = /\$\(([^)]*)\)|`([^`]*)`/g;
+// &&, ||, ;, |, & の順で alternation。長いマッチ優先のため &&/|| を | / & より先に並べる
+const SEPARATOR_REGEX = /\s*(?:&&|\|\||;|\||&)\s*/;
+
+/**
+ * Bashコマンド文字列を個別コマンドに分解する。
+ * - `&&` / `||` / `;` / `|` / `&` でトップレベルを分割
+ * - `$(...)` とバッククォートで囲まれた command substitution の中身も独立コマンドとして抽出
+ * - クォート内の区切り文字はリテラル扱い
+ */
 export function parseBashCommand(input: string): ParsedCommand[] {
-  if (!input.trim()) {
-    return [];
-  }
+  if (!input.trim()) return [];
 
-  const commands: ParsedCommand[] = [];
+  const substitutions: string[] = [];
+  const withoutSubst = input.replace(
+    SUBSTITUTION_REGEX,
+    (_, paren?: string, backtick?: string) => {
+      substitutions.push(paren ?? backtick ?? "");
+      // substitution は外側コマンドから完全に除去（外側 args を汚さない）
+      return "";
+    },
+  );
 
-  // クォート内の文字を一時的に置換して区切り文字を保護
+  // クォート内の区切り文字を保護
   const quotes: string[] = [];
   let quoteIndex = 0;
-  const processedInput = input.replace(/'[^']*'|"[^"]*"/g, (match) => {
+  const processed = withoutSubst.replace(QUOTE_REGEX, (match) => {
     quotes.push(match);
     return `__QUOTE_${quoteIndex++}__`;
   });
 
-  // &&, ;, | で分割
-  const parts = processedInput.split(/\s*(?:&&|;|\|)\s*/);
-
-  for (const part of parts) {
+  const commands: ParsedCommand[] = [];
+  for (const part of processed.split(SEPARATOR_REGEX)) {
     const trimmed = part.trim();
     if (!trimmed) continue;
 
-    // クォートを復元
     let restored = trimmed;
-    quotes.forEach((quote, i) => {
-      restored = restored.replace(`__QUOTE_${i}__`, quote);
+    quotes.forEach((q, i) => {
+      restored = restored.replace(`__QUOTE_${i}__`, q);
     });
+    commands.push(splitCommand(restored));
+  }
 
-    // コマンドと引数を分離
-    const firstSpace = restored.indexOf(" ");
-    if (firstSpace === -1) {
-      commands.push({ command: restored, args: "" });
-      continue;
-    }
-    commands.push({
-      command: restored.substring(0, firstSpace),
-      args: restored.substring(firstSpace + 1).trim(),
-    });
+  // command substitution の中身を再帰的に展開して結果に加える
+  for (const sub of substitutions) {
+    commands.push(...parseBashCommand(sub));
   }
 
   return commands;
+}
+
+function splitCommand(input: string): ParsedCommand {
+  const firstSpace = input.indexOf(" ");
+  if (firstSpace === -1) {
+    return { command: input, args: "" };
+  }
+  return {
+    command: input.substring(0, firstSpace),
+    args: input.substring(firstSpace + 1).trim(),
+  };
 }

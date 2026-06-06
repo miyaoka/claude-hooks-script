@@ -134,4 +134,13 @@
 
 ## Bash 以外のツール
 
-PreToolUse 以外の hook イベントや、PreToolUse でも Bash 以外のツール（Write, Edit, WebFetch など）はすべて素通し（空レスポンス `{}`）となり、Claude Code 本体のデフォルト権限フローに委ねられる。
+PreToolUse 以外の hook イベントや、PreToolUse でも Bash 以外のツール（Write, Edit, WebFetch, WebSearch など）はすべて素通し（空レスポンス `{}`）となり、Claude Code 本体のデフォルト権限フローに委ねられる。WebFetch / WebSearch の許可ドメインや検索クエリ制御は本スクリプトでは扱わないので、Claude Code 本体の `permissions` / `settings.json` 側で設定する。
+
+## 設定の妥当性検証
+
+設定ファイルは厳格に検証される。次のいずれかが満たされない場合は validation error で起動失敗する：
+
+- `command` / `reason` が string で必ず存在する
+- `args` が定義されていれば string
+- `decision` が定義されていれば `"block"` または `"approve"`
+- ルール内のフィールドは `command` / `args` / `decision` / `reason` のみ。`event` / `tool` / `domain` / `query` 等の未知フィールドが含まれていれば error（旧スキーマがサイレントに無効化される事故を防ぐため）
