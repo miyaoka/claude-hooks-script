@@ -64,6 +64,31 @@ describe("parseBashCommand", () => {
         { command: "rm", args: "-rf ~" },
       ]);
     });
+
+    it("redirect構文 >&2 は分離しない", () => {
+      expect(parseBashCommand('echo "err" >&2')).toEqual([
+        { command: "echo", args: '"err" >&2' },
+      ]);
+    });
+
+    it("redirect構文 2>&1 は分離しない", () => {
+      expect(parseBashCommand("make 2>&1 | tee log")).toEqual([
+        { command: "make", args: "2>&1" },
+        { command: "tee", args: "log" },
+      ]);
+    });
+
+    it("&> redirect は分離しない", () => {
+      expect(parseBashCommand("cmd &> /dev/null")).toEqual([
+        { command: "cmd", args: "&> /dev/null" },
+      ]);
+    });
+
+    it("&>> redirect は分離しない", () => {
+      expect(parseBashCommand("cmd &>> /tmp/log")).toEqual([
+        { command: "cmd", args: "&>> /tmp/log" },
+      ]);
+    });
   });
 
   describe("command substitution", () => {

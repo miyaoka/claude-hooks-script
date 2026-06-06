@@ -19,8 +19,6 @@ export type BashHookInput = BaseHookInput & {
   tool_name: "Bash";
   tool_input: {
     command: string;
-    description?: string;
-    timeout?: number;
   };
 };
 
