@@ -30,5 +30,11 @@
     "command": "timeout",
     "decision": "block",
     "reason": "お前はtimeoutコマンドで何をするつもりだ？言ってみろ"
+  },
+  {
+    "command": "find",
+    "args": "^/(\\s|$)",
+    "decision": "block",
+    "reason": "ルート直下のfindはユーザー確認が必要なディレクトリにまで降りてポップアップが出るので禁止。具体的なディレクトリを指定すること"
   }
 ]
