@@ -1,52 +1,40 @@
 [
   {
-    "event": "preToolUse",
-    "tool": "Bash",
     "command": "ls",
     "decision": "approve",
     "reason": "安全なコマンド"
   },
   {
-    "event": "preToolUse",
-    "tool": "Bash",
     "command": "rm",
     "args": "-rf\\s+~",
     "decision": "block",
     "reason": "ホームディレクトリの削除は禁止"
   },
   {
-    "event": "preToolUse",
-    "tool": "Bash",
     "command": "curl",
     "decision": "block",
     "reason": "curlの代わりにWebFetchツールを使用してください"
   },
   {
-    "event": "preToolUse",
-    "tool": "WebFetch",
-    "decision": "approve",
-    "reason": "デフォルトで全てのURLを許可"
-  },
-  {
-    "event": "preToolUse",
-    "tool": "Bash",
     "command": "pnpm",
     "decision": "approve",
     "reason": "pnpmコマンドはデフォルトで使用許可"
   },
   {
-    "event": "preToolUse",
-    "tool": "Bash",
     "command": "pnpm",
     "args": "^(run )?dev",
     "decision": "block",
     "reason": "pnpm run devはclaudeは確認できないので使用不可"
   },
   {
-    "event": "preToolUse",
-    "tool": "Bash",
     "command": "timeout",
     "decision": "block",
     "reason": "お前はtimeoutコマンドで何をするつもりだ？言ってみろ"
+  },
+  {
+    "command": "find",
+    "args": "(?:^|\\s)[\"']?/[\"']?(?:\\s|$)",
+    "decision": "block",
+    "reason": "ルート直下のfindはユーザー確認が必要なディレクトリにまで降りてポップアップが出るので禁止。具体的なディレクトリを指定すること"
   }
 ]

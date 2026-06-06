@@ -128,9 +128,7 @@ describe("tryCatch", () => {
 
     it("非同期関数の同期部分のエラーをキャッチできる", () => {
       const result = tryCatch(() => {
-        // 同期的にエラーを投げる
         throw new Error("Sync error in async context");
-        // 注：非同期のエラーはtryCatchではキャッチできない
       });
 
       expect(result.value).toBeUndefined();

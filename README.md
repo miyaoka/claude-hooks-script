@@ -1,6 +1,6 @@
 # @miyaoka/claude-hooks
 
-Claude Code がツールを実行する際に呼び出される hook スクリプト。設定ファイルのルールに従ってツール実行を制御（許可/ブロック）する。
+Claude Code の PreToolUse / Bash 実行時に呼び出される hook スクリプト。設定ファイルのルールに従って Bash コマンド実行を制御（許可/ブロック）する。
 
 ## 前提条件
 
@@ -8,9 +8,9 @@ Claude Code がツールを実行する際に呼び出される hook スクリ�
 
 ## 使い方
 
-### Claude Codeのhooksに設定
+### Claude Code の hooks に設定
 
-Claude Code の設定ファイル（`~/.claude/settings.json`または`.claude/settings.json`）に以下を記述：
+Claude Code の設定ファイル（`~/.claude/settings.json` または `.claude/settings.json`）に以下を記述：
 
 ```json
 {
@@ -29,9 +29,9 @@ Claude Code の設定ファイル（`~/.claude/settings.json`または`.claude/s
 }
 ```
 
-### hook設定ファイルを作成
+### hook 設定ファイルを作成
 
-hookの動作を制御する設定ファイルを作成する。以下のいずれかの場所に`hooks.config.json`を配置：
+hook の動作を制御する設定ファイルを作成する。以下のいずれかの場所に `hooks.config.json` を配置：
 
 - `~/.claude/hooks.config.json`（ユーザー共通設定）
 - `{プロジェクトルート}/.claude/hooks.config.json`（プロジェクト固有設定）
@@ -39,8 +39,6 @@ hookの動作を制御する設定ファイルを作成する。以下のいず�
 ```json
 [
   {
-    "event": "preToolUse",
-    "tool": "Bash",
     "command": "rm",
     "args": "-rf",
     "decision": "block",
@@ -91,14 +89,13 @@ bun run typecheck
 
 ```
 src/
-├── index.ts          # エントリーポイント（標準入力からJSONを受け取る）
-├── main.ts           # メインロジック（JSON解析、検証、hook処理）
-├── core/             # Hook処理の中核となる検証とルーティング機能
-├── cli/              # コマンドライン引数解析、入力取得、設定ファイル処理
-├── config/           # 設定ファイルの読み込み、検証、パス解決
-├── handlers/         # 各種Hookの処理実装。preToolUse配下にツール別ハンドラー
-├── parsers/          # コマンド文字列の解析処理
-├── types/            # TypeScript型定義。hook/配下にhook関連、userConfig.tsに設定型
-├── utils/            # 共通ユーティリティ（デバッグ、Result型、マッチング処理）
-└── messages/         # ユーザー向けメッセージテンプレート
+├── index.ts        # エントリーポイント
+├── main.ts         # JSON解析・検証・dispatch
+├── bash.ts         # Bashルール評価
+├── bashParser.ts   # Bashコマンドの分割
+├── config.ts       # 設定ファイル読み込み・検証
+├── cli.ts          # 引数解析・入力取得・debug
+├── matcher.ts      # 正規表現/部分一致マッチング
+├── result.ts       # Result型ユーティリティ
+└── types.ts        # 型定義
 ```
