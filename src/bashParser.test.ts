@@ -89,6 +89,26 @@ describe("parseBashCommand", () => {
         { command: "cmd", args: "&>> /tmp/log" },
       ]);
     });
+
+    it("数字直後の & は redirect ではなく background として分離する", () => {
+      expect(parseBashCommand("sleep 0& rm -rf /var")).toEqual([
+        { command: "sleep", args: "0" },
+        { command: "rm", args: "-rf /var" },
+      ]);
+    });
+
+    it("末尾数字トークン直後の & も background として分離する", () => {
+      expect(parseBashCommand("echo 1 2 3& rm -rf /var")).toEqual([
+        { command: "echo", args: "1 2 3" },
+        { command: "rm", args: "-rf /var" },
+      ]);
+    });
+
+    it("数字対数字の N>&N は redirect として保持する", () => {
+      expect(parseBashCommand("cmd 1>&2")).toEqual([
+        { command: "cmd", args: "1>&2" },
+      ]);
+    });
   });
 
   describe("command substitution", () => {
