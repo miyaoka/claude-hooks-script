@@ -1,12 +1,7 @@
 import { checkBashCommand } from "./bash";
 import { debugLog } from "./cli";
 import { tryCatch } from "./result";
-import type {
-  BashHookInput,
-  HookConfig,
-  HookInput,
-  HookResponse,
-} from "./types";
+import type { BashHookInput, HookConfig, HookInput, HookResponse } from "./types";
 
 export async function main(input: string, config: HookConfig): Promise<void> {
   await debugLog(`Raw input: ${input}`);
@@ -62,9 +57,7 @@ function dispatch(input: HookInput, config: HookConfig): HookResponse {
   }
   const command = (input.tool_input as { command?: unknown }).command;
   if (typeof command !== "string") {
-    console.error(
-      "Invalid Bash hook input: tool_input.command must be a string",
-    );
+    console.error("Invalid Bash hook input: tool_input.command must be a string");
     process.exit(1);
   }
 

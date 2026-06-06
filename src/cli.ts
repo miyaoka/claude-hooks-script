@@ -109,22 +109,14 @@ export function parseArgs(): ParsedArgs {
     }
 
     if (canonical === "--input") {
-      const { value, consumedNext } = takeRequiredValue(
-        canonical,
-        inline,
-        next,
-      );
+      const { value, consumedNext } = takeRequiredValue(canonical, inline, next);
       result.input = value;
       i += consumedNext ? 2 : 1;
       continue;
     }
 
     if (canonical === "--config") {
-      const { value, consumedNext } = takeRequiredValue(
-        canonical,
-        inline,
-        next,
-      );
+      const { value, consumedNext } = takeRequiredValue(canonical, inline, next);
       result.config = value;
       i += consumedNext ? 2 : 1;
       continue;
@@ -168,16 +160,11 @@ export async function getInput(inputOption?: string): Promise<string> {
   }
 
   // デフォルト: サンプル入力
-  const defaultInputPath = new URL("../examples/input.json", import.meta.url)
-    .pathname;
-  const defaultInputResult = await tryCatchAsync(() =>
-    Bun.file(defaultInputPath).text(),
-  );
+  const defaultInputPath = new URL("../examples/input.json", import.meta.url).pathname;
+  const defaultInputResult = await tryCatchAsync(() => Bun.file(defaultInputPath).text());
   if (!defaultInputResult.value) {
     console.error(`Error reading default input file: ${defaultInputPath}`);
-    console.error(
-      `Please ensure the file exists or provide input via --input option`,
-    );
+    console.error(`Please ensure the file exists or provide input via --input option`);
     process.exit(1);
   }
   console.error(`Using default input: ${defaultInputPath}`);
