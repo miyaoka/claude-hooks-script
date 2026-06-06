@@ -1,12 +1,6 @@
 #!/usr/bin/env bun
 
-import {
-  getConfig,
-  getInput,
-  initDebugMode,
-  parseArgs,
-  showHelpAndExit,
-} from "./cli";
+import { getConfig, getInput, initDebugMode, parseArgs, showHelpAndExit } from "./cli";
 import { main } from "./main";
 import { tryCatchAsync } from "./result";
 

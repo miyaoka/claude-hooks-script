@@ -23,14 +23,11 @@ export function parseBashCommand(input: string): ParsedCommand[] {
   if (!input.trim()) return [];
 
   const substitutions: string[] = [];
-  const withoutSubst = input.replace(
-    SUBSTITUTION_REGEX,
-    (_, paren?: string, backtick?: string) => {
-      substitutions.push(paren ?? backtick ?? "");
-      // substitution は外側コマンドから完全に除去（外側 args を汚さない）
-      return "";
-    },
-  );
+  const withoutSubst = input.replace(SUBSTITUTION_REGEX, (_, paren?: string, backtick?: string) => {
+    substitutions.push(paren ?? backtick ?? "");
+    // substitution は外側コマンドから完全に除去（外側 args を汚さない）
+    return "";
+  });
 
   // クォート内の区切り文字を保護
   const quotes: string[] = [];

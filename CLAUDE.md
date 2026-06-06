@@ -10,7 +10,11 @@ Claude Code の PreToolUse / Bash 実行をインターセプトし、ルール�
 ## 技術スタック
 
 - Bun (ランタイム・テストランナー)
-- TypeScript
+- pnpm (パッケージマネージャ)
+- TypeScript / tsgo (`@typescript/native-preview`)
+- oxlint + oxfmt (lint / format)
+- lefthook (git hooks)
+- mise (Bun / pnpm のバージョン固定)
 
 ## プロジェクト構成
 
@@ -30,14 +34,17 @@ src/
 ## 検証コマンド
 
 ```sh
-## lint
-bun run lint --fix
+## lint (check)
+pnpm run lint
+
+## lint + format (auto-fix)
+pnpm run fix
 
 ## test
-bun run test
+pnpm run test
 
 ## typecheck
-bun run typecheck
+pnpm run typecheck
 ```
 
 TDD アプローチに従い、まずテストを書いてから実装する

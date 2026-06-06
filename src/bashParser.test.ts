@@ -66,9 +66,7 @@ describe("parseBashCommand", () => {
     });
 
     it("redirect構文 >&2 は分離しない", () => {
-      expect(parseBashCommand('echo "err" >&2')).toEqual([
-        { command: "echo", args: '"err" >&2' },
-      ]);
+      expect(parseBashCommand('echo "err" >&2')).toEqual([{ command: "echo", args: '"err" >&2' }]);
     });
 
     it("redirect構文 2>&1 は分離しない", () => {
@@ -105,9 +103,7 @@ describe("parseBashCommand", () => {
     });
 
     it("数字対数字の N>&N は redirect として保持する", () => {
-      expect(parseBashCommand("cmd 1>&2")).toEqual([
-        { command: "cmd", args: "1>&2" },
-      ]);
+      expect(parseBashCommand("cmd 1>&2")).toEqual([{ command: "cmd", args: "1>&2" }]);
     });
   });
 

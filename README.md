@@ -4,7 +4,14 @@ Claude Code の PreToolUse / Bash 実行時に呼び出される hook スクリ�
 
 ## 前提条件
 
-- [Bun](https://bun.sh/)
+実行用:
+
+- [Bun](https://bun.sh/) (Claude Code が `bunx` で本スクリプトを起動する)
+
+開発用 (本リポジトリで作業する場合):
+
+- [mise](https://mise.jdx.dev/) — `mise.toml` で Bun / pnpm のバージョンを固定
+- pnpm (パッケージマネージャ)
 
 ## 使い方
 
@@ -64,25 +71,28 @@ bunx github:miyaoka/claude-hooks-script -i hooks.input.json
 
 ```bash
 # 依存関係をインストール
-bun install
+pnpm install
 
 # 開発時の実行
-bun run dev
+pnpm run dev
 
 # 開発時の実行（サンプル設定付き）
-bun run dev:example
+pnpm run dev:example
 
 # カスタム入力/設定での実行
-bun run dev --input my-input.json --config my-config.json
+pnpm run dev --input my-input.json --config my-config.json
 
-# lint
-bun run lint --fix
+# lint (check)
+pnpm run lint
+
+# lint + format (auto-fix)
+pnpm run fix
 
 # test
-bun run test
+pnpm run test
 
 # typecheck
-bun run typecheck
+pnpm run typecheck
 ```
 
 ### プロジェクト構成

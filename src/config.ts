@@ -10,10 +10,7 @@ const ALLOWED_RULE_KEYS = new Set(["command", "args", "decision", "reason"]);
  * ユーザー設定とプロジェクト設定をマージしてロードする
  */
 export function loadConfig(projectRoot: string): HookConfig {
-  const paths = [
-    resolveUserConfigPath(),
-    resolveProjectConfigPath(projectRoot),
-  ];
+  const paths = [resolveUserConfigPath(), resolveProjectConfigPath(projectRoot)];
 
   const configs: HookConfig[] = [];
   for (const path of paths) {
@@ -71,11 +68,7 @@ function checkBashRule(rule: unknown): string | null {
   if (r.args !== undefined && typeof r.args !== "string") {
     return "args must be a string when present";
   }
-  if (
-    r.decision !== undefined &&
-    r.decision !== "block" &&
-    r.decision !== "approve"
-  ) {
+  if (r.decision !== undefined && r.decision !== "block" && r.decision !== "approve") {
     return 'decision must be "block" or "approve" when present';
   }
 

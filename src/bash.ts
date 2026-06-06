@@ -1,20 +1,12 @@
 import { parseBashCommand } from "./bashParser";
 import { matchPattern } from "./matcher";
-import type {
-  BashHookInput,
-  BashRule,
-  HookResponse,
-  RuleResult,
-} from "./types";
+import type { BashHookInput, BashRule, HookResponse, RuleResult } from "./types";
 
 /**
  * Bashコマンド実行前のルール評価
  * コマンドを解析し、該当するルールから最も制限的な判断を返す
  */
-export function checkBashCommand(
-  input: BashHookInput,
-  rules: BashRule[],
-): HookResponse {
+export function checkBashCommand(input: BashHookInput, rules: BashRule[]): HookResponse {
   const bashCommand = input.tool_input.command;
   if (!bashCommand) return {};
   if (rules.length === 0) return {};
