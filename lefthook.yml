@@ -1,0 +1,15 @@
+pre-commit:
+  jobs:
+    - name: fix
+      glob: "*.{ts,tsx,js,jsx,json}"
+      run: pnpm run fix
+      stage_fixed: true
+
+    - name: typecheck
+      glob: "*.{ts,tsx}"
+      run: pnpm run typecheck
+
+pre-push:
+  jobs:
+    - name: test
+      run: bun test
