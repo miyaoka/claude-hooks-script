@@ -11,12 +11,9 @@ export function parseBashCommand(input: string): ParsedCommand[] {
   const commands: ParsedCommand[] = [];
 
   // クォート内の文字を一時的に置換して区切り文字を保護
-  let processedInput = input;
   const quotes: string[] = [];
   let quoteIndex = 0;
-
-  // シングルクォートとダブルクォートの内容を保護
-  processedInput = processedInput.replace(/'[^']*'|"[^"]*"/g, (match) => {
+  const processedInput = input.replace(/'[^']*'|"[^"]*"/g, (match) => {
     quotes.push(match);
     return `__QUOTE_${quoteIndex++}__`;
   });
@@ -38,12 +35,12 @@ export function parseBashCommand(input: string): ParsedCommand[] {
     const firstSpace = restored.indexOf(" ");
     if (firstSpace === -1) {
       commands.push({ command: restored, args: "" });
-    } else {
-      commands.push({
-        command: restored.substring(0, firstSpace),
-        args: restored.substring(firstSpace + 1).trim(),
-      });
+      continue;
     }
+    commands.push({
+      command: restored.substring(0, firstSpace),
+      args: restored.substring(firstSpace + 1).trim(),
+    });
   }
 
   return commands;

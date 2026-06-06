@@ -27,7 +27,7 @@ describe("matchPattern", () => {
   });
 
   it("特殊文字を含む文字列でも動作する", () => {
-    expect(matchPattern(".*", "anything")).toBe(true); // 正規表現として
-    expect(matchPattern("file.txt", "open file.txt")).toBe(true); // 文字列として
+    expect(matchPattern(".*", "anything")).toBe(true);
+    expect(matchPattern("file.txt", "open file.txt")).toBe(true);
   });
 });

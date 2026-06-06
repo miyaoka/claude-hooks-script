@@ -5,7 +5,7 @@ Claude Code 用の hook スクリプトを実装するプロジェクト
 ## 概要
 
 このプロジェクトは`bunx github:miyaoka/claude-hooks-script`で実行可能な Claude Code 用の hook スクリプトを提供する
-Claude Code のツール使用をインターセプトし、カスタムロジックを追加できる
+Claude Code の PreToolUse / Bash 実行をインターセプトし、ルールに基づいて許可/ブロックを判定する
 
 ## 技術スタック
 
@@ -16,16 +16,15 @@ Claude Code のツール使用をインターセプトし、カスタムロジ�
 
 ```
 src/
-├── index.ts          # エントリーポイント（標準入力からJSONを受け取る）
-├── main.ts           # メインロジック（JSON解析、検証、hook処理）
-├── core/             # Hook処理の中核となる検証とルーティング機能
-├── cli/              # コマンドライン引数解析、入力取得、設定ファイル処理
-├── config/           # 設定ファイルの読み込み、検証、パス解決
-├── handlers/         # 各種Hookの処理実装。preToolUse配下にツール別ハンドラー
-├── parsers/          # コマンド文字列の解析処理
-├── types/            # TypeScript型定義。hook/配下にhook関連、userConfig.tsに設定型
-├── utils/            # 共通ユーティリティ（デバッグ、Result型、マッチング処理）
-└── messages/         # ユーザー向けメッセージテンプレート
+├── index.ts        # エントリーポイント
+├── main.ts         # JSON解析・検証・dispatch
+├── bash.ts         # Bashルール評価
+├── bashParser.ts   # Bashコマンドの分割
+├── config.ts       # 設定ファイル読み込み・検証
+├── cli.ts          # 引数解析・入力取得・debug
+├── matcher.ts      # 正規表現/部分一致マッチング
+├── result.ts       # Result型ユーティリティ
+└── types.ts        # 型定義
 ```
 
 ## 検証コマンド
@@ -45,14 +44,13 @@ TDD アプローチに従い、まずテストを書いてから実装する
 
 ## 実装済み機能
 
-### PreToolUse Hook
+### PreToolUse / Bash チェック
 
-- Bashツールの実行を検証・制御
-- コマンドとargsによるルールマッチング
-- 正規表現によるargsパターンマッチング
+- Bashコマンドとargsによるルールマッチング
+- 正規表現または部分一致によるargsパターンマッチング
 - decision（block/approve）による実行制御
-- WebFetchツールのドメインベース制御
-- WebSearchツールのクエリベース制御
+- 複合コマンド（`&&` / `;` / `|`）の各サブコマンドを個別評価
+- PreToolUse 以外、または Bash 以外のツールは素通し
 
 ### デバッグ機能
 
@@ -76,12 +74,10 @@ TDD アプローチに従い、まずテストを書いてから実装する
 
 ユーザー設定とプロジェクト設定の両方が存在する場合は、それらがマージされる。起動時に設定ファイルの検証が行われ、無効な設定がある場合はエラーメッセージを表示して終了する
 
-## Hook Types
+## 対応 Hook
 
-- PreToolUse: ツール実行前の検証（実装済み）
-  - Bash: コマンドとargsでのマッチング
-  - WebFetch: URLのドメインでのマッチング
-  - WebSearch: 検索クエリでのマッチング
+- PreToolUse + tool_name: "Bash" のみ処理
+  - その他の hook event / tool は空レスポンス（`{}`）で素通し
 
 ## 使用方法
 
