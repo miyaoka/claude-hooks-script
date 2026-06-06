@@ -144,16 +144,7 @@ export async function showHelpAndExit(): Promise<never> {
 // --- input / config loading ---------------------------------------------
 
 export async function getInput(inputOption?: string): Promise<string> {
-  // パイプ経由の入力（本番）
-  if (!process.stdin.isTTY) {
-    const chunks: Buffer[] = [];
-    for await (const chunk of process.stdin) {
-      chunks.push(chunk);
-    }
-    return Buffer.concat(chunks).toString();
-  }
-
-  // --input指定
+  // --input指定（最優先）
   if (inputOption) {
     const inputResult = await tryCatchAsync(() => Bun.file(inputOption).text());
     if (!inputResult.value) {
@@ -164,6 +155,15 @@ export async function getInput(inputOption?: string): Promise<string> {
     console.log(`Input file: ${inputOption}`);
     console.log(inputResult.value);
     return inputResult.value;
+  }
+
+  // パイプ経由の入力（本番：Claude Codeからのstdin）
+  if (!process.stdin.isTTY) {
+    const chunks: Buffer[] = [];
+    for await (const chunk of process.stdin) {
+      chunks.push(chunk);
+    }
+    return Buffer.concat(chunks).toString();
   }
 
   // デフォルト: サンプル入力
