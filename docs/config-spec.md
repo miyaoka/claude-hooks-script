@@ -4,9 +4,9 @@
 
 ## ルールのフィールド
 
-- `command`: コマンド名（必須）
+- `command`: コマンド名（必須）。`"*"` を指定するとワイルドカードルールになる（後述）
 - `reason`: 判定理由（必須）
-- `args`: 引数パターン（正規表現または部分文字列）（オプション）
+- `args`: 引数パターン（正規表現または部分文字列）（オプション。ワイルドカードルールでは必須）
 - `decision`: `"block"` または `"approve"`（オプション。未指定の場合は reason のみ表示）
 
 ### 設定例
@@ -44,6 +44,26 @@
 - `echo $(rm -rf ~)` は `echo`（args 空）と `rm`（args=`-rf ~`）の 2 つとして評価される
 - `sleep 0 & rm -rf /var` は `sleep` と `rm` の 2 つに分離される
 - `make 2>&1 | tee log` は `make`（args=`2>&1`）と `tee` に分離される（`&` は redirect の一部なので保持）
+
+## ワイルドカードルール
+
+`command: "*"` のルールは、コマンド分割後の引数ではなく**分割前の生のコマンド文字列全体**に `args` パターンを照合する。
+
+コマンド単位の照合は変数代入で迂回できる（`f=/path/to/node_modules/pkg/index.js; cat "$f"` では `cat` の引数に `node_modules` が現れない）ため、特定の文字列を含むコマンドを丸ごと禁止したい場合はワイルドカードルールを使う。
+
+```json
+[
+  {
+    "command": "*",
+    "args": "node_modules",
+    "decision": "block",
+    "reason": "node_modulesを直接読むな。ghqでソースリポジトリを取得して調べろ"
+  }
+]
+```
+
+- `args` は必須。args なしの `"*"` は全コマンド無条件マッチになるため validation error
+- マッチ結果は通常ルールと同じ土俵で `block > undefined > approve` の優先順位に参加する（ワイルドカードの block はコマンド別の approve に勝つ）
 
 ## マッチングルールと優先順位
 

@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { WILDCARD_COMMAND } from "./types";
 import type { HookConfig } from "./types";
 
 const CONFIG_FILE = "hooks.config.json";
@@ -70,6 +71,10 @@ function checkBashRule(rule: unknown): string | null {
   }
   if (r.decision !== undefined && r.decision !== "block" && r.decision !== "approve") {
     return 'decision must be "block" or "approve" when present';
+  }
+  // argsなしの "*" は全コマンド無条件マッチになるため禁止
+  if (r.command === WILDCARD_COMMAND && typeof r.args !== "string") {
+    return 'wildcard rule (command: "*") requires args';
   }
 
   const unknown = Object.keys(r).filter((k) => !ALLOWED_RULE_KEYS.has(k));

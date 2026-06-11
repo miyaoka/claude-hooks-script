@@ -1,3 +1,9 @@
+/**
+ * command にこの値を指定すると、コマンド分割後の args ではなく
+ * 分割前の生のコマンド文字列全体に args パターンを照合する
+ */
+export const WILDCARD_COMMAND = "*";
+
 export type BashRule = {
   command: string;
   args?: string;

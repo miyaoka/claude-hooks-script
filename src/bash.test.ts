@@ -243,6 +243,62 @@ describe("checkBashCommand", () => {
     });
   });
 
+  describe("ワイルドカードルール", () => {
+    const nodeModulesBlock: BashRule = {
+      command: "*",
+      args: "node_modules",
+      decision: "block",
+      reason: "node_modules禁止",
+    };
+    const blocked = { decision: "block", reason: "node_modules禁止" } as const;
+
+    it("生のコマンド文字列全体にマッチする", () => {
+      expect(
+        checkBashCommand(createBashInput("cat node_modules/foo/index.js"), [nodeModulesBlock]),
+      ).toEqual(blocked);
+    });
+
+    it("変数代入で引数からパターンを消しても捕捉される", () => {
+      const evasion =
+        'f=/path/to/node_modules/@scope/pkg/dist/index.js; ls "$f" >/dev/null && grep -n "foo" "$f" | head -20';
+      expect(checkBashCommand(createBashInput(evasion), [nodeModulesBlock])).toEqual(blocked);
+    });
+
+    it("パターンを含まないコマンドにはマッチしない", () => {
+      expect(checkBashCommand(createBashInput("ls src"), [nodeModulesBlock])).toEqual({});
+    });
+
+    it("ワイルドカードblockがコマンド別approveより優先される", () => {
+      const rules: BashRule[] = [
+        { command: "ls", decision: "approve", reason: "lsは許可" },
+        nodeModulesBlock,
+      ];
+      expect(checkBashCommand(createBashInput("ls node_modules"), rules)).toEqual(blocked);
+    });
+
+    it("ワイルドカード非マッチ時はコマンド別ルールが通常通り効く", () => {
+      const rules: BashRule[] = [
+        { command: "ls", decision: "approve", reason: "lsは許可" },
+        nodeModulesBlock,
+      ];
+      expect(checkBashCommand(createBashInput("ls src"), rules)).toEqual({
+        decision: "approve",
+        reason: "lsは許可",
+      });
+    });
+
+    it("同じcommand/argsのワイルドカードは後勝ち", () => {
+      const rules: BashRule[] = [
+        nodeModulesBlock,
+        { command: "*", args: "node_modules", decision: "approve", reason: "後のルール" },
+      ];
+      expect(checkBashCommand(createBashInput("ls node_modules"), rules)).toEqual({
+        decision: "approve",
+        reason: "後のルール",
+      });
+    });
+  });
+
   describe("エッジケース", () => {
     it("空のcommand", () => {
       const rules: BashRule[] = [{ command: "ls", decision: "approve", reason: "lsは許可" }];

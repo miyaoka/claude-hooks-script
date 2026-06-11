@@ -1,5 +1,6 @@
 import { parseBashCommand } from "./bashParser";
 import { matchPattern } from "./matcher";
+import { WILDCARD_COMMAND } from "./types";
 import type { BashHookInput, BashRule, HookResponse, RuleResult } from "./types";
 
 /**
@@ -12,22 +13,36 @@ export function checkBashCommand(input: BashHookInput, rules: BashRule[]): HookR
   if (rules.length === 0) return {};
 
   const normalizedRules = normalizeRules(rules);
+  const wildcardRules = normalizedRules.filter((rule) => rule.command === WILDCARD_COMMAND);
+  const commandRules = normalizedRules.filter((rule) => rule.command !== WILDCARD_COMMAND);
+
+  const matchedRules: RuleResult[] = collectWildcardRules(wildcardRules, bashCommand);
   const parsedCommands = parseBashCommand(bashCommand);
-  const matchedRules: RuleResult[] = [];
 
   parsedCommands.forEach((parsed) => {
     // args指定ありのルールを優先的にチェック
-    const specific = collectSpecificRules(normalizedRules, parsed);
+    const specific = collectSpecificRules(commandRules, parsed);
 
     if (specific.length > 0) {
       matchedRules.push(...specific);
       return;
     }
     // 特定ルールがマッチしない場合のみデフォルト（args指定なし）を使う
-    matchedRules.push(...collectDefaultRules(normalizedRules, parsed.command));
+    matchedRules.push(...collectDefaultRules(commandRules, parsed.command));
   });
 
   return selectMostRestrictive(matchedRules);
+}
+
+/**
+ * ワイルドカードルールを生のコマンド文字列全体と照合する。
+ * コマンド分割後のargsだと変数代入（f=/path; cat "$f"）でパターンが引数から消えるため、
+ * 分割前の文字列に当てて迂回を防ぐ
+ */
+function collectWildcardRules(rules: BashRule[], rawCommand: string): RuleResult[] {
+  return rules
+    .filter((rule) => rule.args !== undefined && matchPattern(rule.args, rawCommand))
+    .map((rule) => ({ decision: rule.decision, reason: rule.reason }));
 }
 
 /**

@@ -49,6 +49,22 @@ describe("validateConfig", () => {
         ]),
       ).toBe(true);
     });
+
+    it("ワイルドカードルール (args あり)", () => {
+      expect(
+        validateConfig([{ command: "*", args: "node_modules", decision: "block", reason: "禁止" }]),
+      ).toBe(true);
+    });
+  });
+
+  describe("ワイルドカードルールエラー", () => {
+    it('args なしの "*" を拒否', () => {
+      expect(validateConfig([{ command: "*", decision: "block", reason: "禁止" }])).toBe(false);
+      expect(errorMock).toHaveBeenCalledWith(
+        'Config validation error at index 0: wildcard rule (command: "*") requires args',
+        { command: "*", decision: "block", reason: "禁止" },
+      );
+    });
   });
 
   describe("配列構造エラー", () => {
