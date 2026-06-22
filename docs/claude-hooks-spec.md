@@ -215,7 +215,7 @@ PreToolUse は tool 系イベントで唯一 `hookSpecificOutput` で判定す�
   - `"allow"`: 通常の権限フローをスキップして許可
   - `"deny"`: ツール呼び出しをブロック。`permissionDecisionReason` が Claude に表示される
   - `"ask"`: ユーザーの権限ダイアログにエスカレーション
-  - `"defer"` / 省略: 通常の権限フローに委譲（exit 0 で無出力と同等）
+  - `"defer"` / 省略: 権限判定をせず通常フローに委譲（許可ではない）。判定をしないだけで、`additionalContext` を併記すれば文脈注入は行われる
 - `permissionDecisionReason`: `"deny"` / `"ask"` のときユーザーに表示。`"allow"` / `"defer"` では表示されない
 - `updatedInput`: 実行前にツール引数を置き換える（Bash なら `command` を差し替え）
 - `additionalContext`: `permissionDecision` を省いて単体で返すと、ブロック・承認のいずれもせずモデルの文脈に注入される（警告用途）

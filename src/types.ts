@@ -39,6 +39,7 @@ export type HookInput = BaseHookInput & {
  * （decision/reason は UserPromptSubmit / PostToolUse / Stop 等の別イベント用）。
  * - 許可判定は permissionDecision（公式は allow/deny/ask/defer。本フックは allow/deny のみ使用、省略時は defer 相当）
  * - permissionDecision を省き additionalContext 単体で返すとブロックせずモデルへ文脈を注入する
+ * - 公式の updatedInput（実行前のツール引数書き換え）は、本フックが引数を書き換えないため持たない
  */
 export type PreToolUseHookOutput = {
   hookEventName: "PreToolUse";

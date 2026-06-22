@@ -56,6 +56,7 @@ TDD アプローチに従い、まずテストを書いてから実装する
 - Bashコマンドとargsによるルールマッチング
 - 正規表現または部分一致によるargsパターンマッチング
 - decision（deny/allow）による実行制御
+- decision 省略ルールは判定せず reason を additionalContext としてモデルへ渡す（ブロックも許可もしない警告）
 - 複合コマンド（`&&` / `;` / `|`）の各サブコマンドを個別評価
 - PreToolUse 以外、または Bash 以外のツールは素通し
 
