@@ -9,6 +9,9 @@
 - `args`: 引数パターン（正規表現または部分文字列）（オプション。ワイルドカードルールでは必須）
 - `decision`: `"deny"` または `"allow"`（オプション。未指定の場合は判定せず、reason を `additionalContext` としてモデルへ渡す＝ブロックも許可もしない警告用途。ユーザー画面には出ない）
 
+> [!NOTE]
+> `decision` 省略ルールの `reason` は `additionalContext` 経由でモデルに渡るため、命令文ではなく事実の記述で書く。命令調は prompt-injection 防御で握り潰されうる（`claude-hooks-spec.md` の additionalContext 節を参照）。`deny` / `allow` の `reason` は `permissionDecisionReason` に乗るためこの制約は受けない。
+
 ### 設定例
 
 ```json
