@@ -103,24 +103,22 @@ function collectSpecificRules(
 }
 
 /**
- * 最も制限的なルールを選択
- * 優先順位: block > undefined > approve
- * 出力は PreToolUse の hookSpecificOutput 形式に変換する:
- * - block → permissionDecision: "deny"
- * - approve → permissionDecision: "allow"
+ * 最も制限的なルールを選択し PreToolUse の hookSpecificOutput 形式で返す
+ * 優先順位: deny > undefined > allow
+ * - deny / allow → permissionDecision にそのまま渡す
  * - decision なし（警告のみ） → additionalContext 単体（ブロックせず文脈注入）
  */
 function selectMostRestrictive(rules: RuleResult[]): HookResponse {
   if (rules.length === 0) return {};
 
-  const block = rules.find((r) => r.decision === "block");
-  if (block) return permissionResponse("deny", block.reason);
+  const deny = rules.find((r) => r.decision === "deny");
+  if (deny) return permissionResponse("deny", deny.reason);
 
   const undef = rules.find((r) => r.decision === undefined);
   if (undef) return contextResponse(undef.reason);
 
-  const approve = rules.find((r) => r.decision === "approve");
-  if (approve) return permissionResponse("allow", approve.reason);
+  const allow = rules.find((r) => r.decision === "allow");
+  if (allow) return permissionResponse("allow", allow.reason);
 
   return {};
 }

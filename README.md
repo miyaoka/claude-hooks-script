@@ -48,7 +48,7 @@ hook の動作を制御する設定ファイルを作成する。以下のいず
   {
     "command": "rm",
     "args": "-rf",
-    "decision": "block",
+    "decision": "deny",
     "reason": "危険なrmコマンドの実行をブロック"
   }
 ]

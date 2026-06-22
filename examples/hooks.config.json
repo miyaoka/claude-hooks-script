@@ -1,40 +1,40 @@
 [
   {
     "command": "ls",
-    "decision": "approve",
+    "decision": "allow",
     "reason": "安全なコマンド"
   },
   {
     "command": "rm",
     "args": "-rf\\s+~",
-    "decision": "block",
+    "decision": "deny",
     "reason": "ホームディレクトリの削除は禁止"
   },
   {
     "command": "curl",
-    "decision": "block",
+    "decision": "deny",
     "reason": "curlの代わりにWebFetchツールを使用してください"
   },
   {
     "command": "pnpm",
-    "decision": "approve",
+    "decision": "allow",
     "reason": "pnpmコマンドはデフォルトで使用許可"
   },
   {
     "command": "pnpm",
     "args": "^(run )?dev",
-    "decision": "block",
+    "decision": "deny",
     "reason": "pnpm run devはclaudeは確認できないので使用不可"
   },
   {
     "command": "timeout",
-    "decision": "block",
+    "decision": "deny",
     "reason": "お前はtimeoutコマンドで何をするつもりだ？言ってみろ"
   },
   {
     "command": "find",
     "args": "(?:^|\\s)[\"']?/[\"']?(?:\\s|$)",
-    "decision": "block",
+    "decision": "deny",
     "reason": "ルート直下のfindはユーザー確認が必要なディレクトリにまで降りてポップアップが出るので禁止。具体的なディレクトリを指定すること"
   }
 ]

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { checkBashCommand } from "./bash";
-import type { BashHookInput, BashRule } from "./types";
+import type { BashHookInput, BashRule, HookResponse } from "./types";
 
 function createBashInput(command: string): BashHookInput {
   return {
@@ -14,33 +14,33 @@ function createBashInput(command: string): BashHookInput {
 }
 
 // 期待する hookSpecificOutput を組み立てるヘルパー
-function deny(reason: string) {
+function deny(reason: string): HookResponse {
   return {
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
       permissionDecision: "deny",
       permissionDecisionReason: reason,
     },
-  } as const;
+  };
 }
 
-function allow(reason: string) {
+function allow(reason: string): HookResponse {
   return {
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
       permissionDecision: "allow",
       permissionDecisionReason: reason,
     },
-  } as const;
+  };
 }
 
-function context(reason: string) {
+function context(reason: string): HookResponse {
   return {
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
       additionalContext: reason,
     },
-  } as const;
+  };
 }
 
 describe("checkBashCommand", () => {
@@ -51,12 +51,12 @@ describe("checkBashCommand", () => {
     });
 
     it("ルール非マッチは空レスポンス", () => {
-      const rules: BashRule[] = [{ command: "rm", decision: "block", reason: "rmは禁止" }];
+      const rules: BashRule[] = [{ command: "rm", decision: "deny", reason: "rmは禁止" }];
       expect(checkBashCommand(createBashInput("ls -la"), rules)).toEqual({});
     });
 
     it("commandのみマッチ", () => {
-      const rules: BashRule[] = [{ command: "rm", decision: "block", reason: "rmコマンドは危険" }];
+      const rules: BashRule[] = [{ command: "rm", decision: "deny", reason: "rmコマンドは危険" }];
       expect(checkBashCommand(createBashInput("rm -rf /"), rules)).toEqual(
         deny("rmコマンドは危険"),
       );
@@ -67,7 +67,7 @@ describe("checkBashCommand", () => {
         {
           command: "git",
           args: "push",
-          decision: "block",
+          decision: "deny",
           reason: "pushは禁止",
         },
       ];
@@ -89,11 +89,11 @@ describe("checkBashCommand", () => {
   describe("ルール優先順位", () => {
     it("argsありがargsなしより優先", () => {
       const rules: BashRule[] = [
-        { command: "rm", decision: "block", reason: "rmはデフォルト禁止" },
+        { command: "rm", decision: "deny", reason: "rmはデフォルト禁止" },
         {
           command: "rm",
           args: "/tmp/",
-          decision: "approve",
+          decision: "allow",
           reason: "/tmpは削除可",
         },
       ];
@@ -102,12 +102,12 @@ describe("checkBashCommand", () => {
       );
     });
 
-    it("block > undefined > approveの優先順位", () => {
+    it("deny > undefined > allowの優先順位", () => {
       const rules: BashRule[] = [
         {
           command: "echo",
           args: "safe",
-          decision: "approve",
+          decision: "allow",
           reason: "安全な内容",
         },
         {
@@ -118,7 +118,7 @@ describe("checkBashCommand", () => {
         {
           command: "echo",
           args: "danger",
-          decision: "block",
+          decision: "deny",
           reason: "危険な内容",
         },
       ];
@@ -136,8 +136,8 @@ describe("checkBashCommand", () => {
 
     it("同じcommandは後勝ち", () => {
       const rules: BashRule[] = [
-        { command: "ls", decision: "block", reason: "最初のルール" },
-        { command: "ls", decision: "approve", reason: "後のルール" },
+        { command: "ls", decision: "deny", reason: "最初のルール" },
+        { command: "ls", decision: "allow", reason: "後のルール" },
       ];
       expect(checkBashCommand(createBashInput("ls -la"), rules)).toEqual(allow("後のルール"));
     });
@@ -147,13 +147,13 @@ describe("checkBashCommand", () => {
         {
           command: "git",
           args: "push",
-          decision: "block",
+          decision: "deny",
           reason: "最初のルール",
         },
         {
           command: "git",
           args: "push",
-          decision: "approve",
+          decision: "allow",
           reason: "後のルール",
         },
       ];
@@ -169,13 +169,13 @@ describe("checkBashCommand", () => {
         {
           command: "rm",
           args: "^/home/",
-          decision: "block",
+          decision: "deny",
           reason: "ホームディレクトリ禁止",
         },
         {
           command: "rm",
           args: "\\.log$",
-          decision: "approve",
+          decision: "allow",
           reason: "ログファイルは削除可",
         },
       ];
@@ -194,7 +194,7 @@ describe("checkBashCommand", () => {
         {
           command: "echo",
           args: "password",
-          decision: "block",
+          decision: "deny",
           reason: "パスワード禁止",
         },
       ];
@@ -208,7 +208,7 @@ describe("checkBashCommand", () => {
         {
           command: "echo",
           args: "[invalid",
-          decision: "block",
+          decision: "deny",
           reason: "特殊文字を含む",
         },
       ];
@@ -224,10 +224,10 @@ describe("checkBashCommand", () => {
         {
           command: "cd",
           args: "/",
-          decision: "block",
+          decision: "deny",
           reason: "ルートへの移動禁止",
         },
-        { command: "rm", decision: "block", reason: "rm禁止" },
+        { command: "rm", decision: "deny", reason: "rm禁止" },
       ];
       expect(checkBashCommand(createBashInput("cd / && rm -rf *"), rules)).toEqual(
         deny("ルートへの移動禁止"),
@@ -239,10 +239,10 @@ describe("checkBashCommand", () => {
         {
           command: "echo",
           args: "start",
-          decision: "approve",
+          decision: "allow",
           reason: "開始OK",
         },
-        { command: "rm", decision: "block", reason: "rm禁止" },
+        { command: "rm", decision: "deny", reason: "rm禁止" },
       ];
       expect(checkBashCommand(createBashInput("echo start; rm file.txt"), rules)).toEqual(
         deny("rm禁止"),
@@ -254,7 +254,7 @@ describe("checkBashCommand", () => {
         {
           command: "cat",
           args: "/etc/passwd",
-          decision: "block",
+          decision: "deny",
           reason: "機密ファイル禁止",
         },
       ];
@@ -265,50 +265,50 @@ describe("checkBashCommand", () => {
   });
 
   describe("ワイルドカードルール", () => {
-    const nodeModulesBlock: BashRule = {
+    const nodeModulesDeny: BashRule = {
       command: "*",
       args: "node_modules",
-      decision: "block",
+      decision: "deny",
       reason: "node_modules禁止",
     };
-    const blocked = deny("node_modules禁止");
+    const denied = deny("node_modules禁止");
 
     it("生のコマンド文字列全体にマッチする", () => {
       expect(
-        checkBashCommand(createBashInput("cat node_modules/foo/index.js"), [nodeModulesBlock]),
-      ).toEqual(blocked);
+        checkBashCommand(createBashInput("cat node_modules/foo/index.js"), [nodeModulesDeny]),
+      ).toEqual(denied);
     });
 
     it("変数代入で引数からパターンを消しても捕捉される", () => {
       const evasion =
         'f=/path/to/node_modules/@scope/pkg/dist/index.js; ls "$f" >/dev/null && grep -n "foo" "$f" | head -20';
-      expect(checkBashCommand(createBashInput(evasion), [nodeModulesBlock])).toEqual(blocked);
+      expect(checkBashCommand(createBashInput(evasion), [nodeModulesDeny])).toEqual(denied);
     });
 
     it("パターンを含まないコマンドにはマッチしない", () => {
-      expect(checkBashCommand(createBashInput("ls src"), [nodeModulesBlock])).toEqual({});
+      expect(checkBashCommand(createBashInput("ls src"), [nodeModulesDeny])).toEqual({});
     });
 
-    it("ワイルドカードblockがコマンド別approveより優先される", () => {
+    it("ワイルドカードdenyがコマンド別allowより優先される", () => {
       const rules: BashRule[] = [
-        { command: "ls", decision: "approve", reason: "lsは許可" },
-        nodeModulesBlock,
+        { command: "ls", decision: "allow", reason: "lsは許可" },
+        nodeModulesDeny,
       ];
-      expect(checkBashCommand(createBashInput("ls node_modules"), rules)).toEqual(blocked);
+      expect(checkBashCommand(createBashInput("ls node_modules"), rules)).toEqual(denied);
     });
 
     it("ワイルドカード非マッチ時はコマンド別ルールが通常通り効く", () => {
       const rules: BashRule[] = [
-        { command: "ls", decision: "approve", reason: "lsは許可" },
-        nodeModulesBlock,
+        { command: "ls", decision: "allow", reason: "lsは許可" },
+        nodeModulesDeny,
       ];
       expect(checkBashCommand(createBashInput("ls src"), rules)).toEqual(allow("lsは許可"));
     });
 
     it("同じcommand/argsのワイルドカードは後勝ち", () => {
       const rules: BashRule[] = [
-        nodeModulesBlock,
-        { command: "*", args: "node_modules", decision: "approve", reason: "後のルール" },
+        nodeModulesDeny,
+        { command: "*", args: "node_modules", decision: "allow", reason: "後のルール" },
       ];
       expect(checkBashCommand(createBashInput("ls node_modules"), rules)).toEqual(
         allow("後のルール"),
@@ -318,7 +318,7 @@ describe("checkBashCommand", () => {
 
   describe("エッジケース", () => {
     it("空のcommand", () => {
-      const rules: BashRule[] = [{ command: "ls", decision: "approve", reason: "lsは許可" }];
+      const rules: BashRule[] = [{ command: "ls", decision: "allow", reason: "lsは許可" }];
       expect(checkBashCommand(createBashInput(""), rules)).toEqual({});
     });
   });
@@ -329,18 +329,18 @@ describe("checkBashCommand", () => {
         {
           command: "git",
           args: "push",
-          decision: "block",
+          decision: "deny",
           reason: "pushは禁止",
         },
         {
           command: "git",
           args: "pull",
-          decision: "approve",
+          decision: "allow",
           reason: "pullは許可",
         },
         {
           command: "git",
-          decision: "approve",
+          decision: "allow",
           reason: "その他のgitコマンドは許可",
         },
       ];
@@ -360,17 +360,17 @@ describe("checkBashCommand", () => {
 
     it("rmコマンドの制御", () => {
       const rules: BashRule[] = [
-        { command: "rm", decision: "block", reason: "rmはデフォルト禁止" },
+        { command: "rm", decision: "deny", reason: "rmはデフォルト禁止" },
         {
           command: "rm",
           args: "^/tmp/",
-          decision: "approve",
+          decision: "allow",
           reason: "/tmpは削除可",
         },
         {
           command: "rm",
           args: "^/var/log/.*\\.log$",
-          decision: "approve",
+          decision: "allow",
           reason: "ログファイルは削除可",
         },
       ];
@@ -392,19 +392,19 @@ describe("checkBashCommand", () => {
       const rules: BashRule[] = [
         {
           command: "curl",
-          decision: "approve",
+          decision: "allow",
           reason: "curlはデフォルト許可",
         },
         {
           command: "curl",
           args: "^http://",
-          decision: "block",
+          decision: "deny",
           reason: "HTTPは禁止",
         },
         {
           command: "curl",
           args: "localhost|127\\.0\\.0\\.1",
-          decision: "approve",
+          decision: "allow",
           reason: "ローカルは許可",
         },
       ];
@@ -417,7 +417,7 @@ describe("checkBashCommand", () => {
         deny("HTTPは禁止"),
       );
 
-      // localhost http → 両方マッチしてblockが優先
+      // localhost http → 両方マッチしてdenyが優先
       expect(checkBashCommand(createBashInput("curl http://localhost:3000"), rules)).toEqual(
         deny("HTTPは禁止"),
       );
@@ -430,7 +430,7 @@ describe("checkBashCommand", () => {
         {
           command: "find",
           args: "(?:^|\\s)[\"']?/[\"']?(?:\\s|$)",
-          decision: "block",
+          decision: "deny",
           reason,
         },
       ];
@@ -451,17 +451,17 @@ describe("checkBashCommand", () => {
     });
 
     it("$(...)に隠したrmもブロックされる", () => {
-      const rules: BashRule[] = [{ command: "rm", decision: "block", reason: "rm禁止" }];
+      const rules: BashRule[] = [{ command: "rm", decision: "deny", reason: "rm禁止" }];
       expect(checkBashCommand(createBashInput("echo $(rm -rf ~)"), rules)).toEqual(deny("rm禁止"));
     });
 
     it("バッククォートに隠したrmもブロックされる", () => {
-      const rules: BashRule[] = [{ command: "rm", decision: "block", reason: "rm禁止" }];
+      const rules: BashRule[] = [{ command: "rm", decision: "deny", reason: "rm禁止" }];
       expect(checkBashCommand(createBashInput("echo `rm -rf ~`"), rules)).toEqual(deny("rm禁止"));
     });
 
     it("&でバックグラウンド化したrmもブロックされる", () => {
-      const rules: BashRule[] = [{ command: "rm", decision: "block", reason: "rm禁止" }];
+      const rules: BashRule[] = [{ command: "rm", decision: "deny", reason: "rm禁止" }];
       expect(checkBashCommand(createBashInput("sleep 0 & rm -rf ~"), rules)).toEqual(
         deny("rm禁止"),
       );
@@ -471,7 +471,7 @@ describe("checkBashCommand", () => {
       const reason = "ユーザーroot削除禁止";
       const result = deny(reason);
       const rules: BashRule[] = [
-        { command: "rm", args: "-[rf]{2}\\s+~", decision: "block", reason },
+        { command: "rm", args: "-[rf]{2}\\s+~", decision: "deny", reason },
       ];
       expect(checkBashCommand(createBashInput("rm -rf ~"), rules)).toEqual(result);
       expect(checkBashCommand(createBashInput("rm -fr ~"), rules)).toEqual(result);

@@ -7,7 +7,7 @@ export const WILDCARD_COMMAND = "*";
 export type BashRule = {
   command: string;
   args?: string;
-  decision?: "approve" | "block";
+  decision?: "allow" | "deny";
   reason: string;
 };
 
@@ -55,6 +55,6 @@ export type HookResponse = {
 };
 
 export type RuleResult = {
-  decision: "approve" | "block" | undefined;
+  decision: "allow" | "deny" | undefined;
   reason: string;
 };

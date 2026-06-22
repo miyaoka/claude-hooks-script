@@ -1,5 +1,9 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
-import { validateConfig } from "./config";
+import { formatError, readConfig, validateConfig } from "./config";
+import type { HookConfig } from "./types";
 
 describe("validateConfig", () => {
   let errorMock: ReturnType<typeof mock>;
@@ -20,21 +24,21 @@ describe("validateConfig", () => {
       expect(validateConfig([{ command: "ls", reason: "lsは許可" }])).toBe(true);
     });
 
-    it("全フィールド指定 (block)", () => {
+    it("全フィールド指定 (deny)", () => {
       expect(
         validateConfig([
           {
             command: "rm",
             args: "-rf",
-            decision: "block",
+            decision: "deny",
             reason: "危険",
           },
         ]),
       ).toBe(true);
     });
 
-    it("decision: approve も受け付ける", () => {
-      expect(validateConfig([{ command: "ls", decision: "approve", reason: "安全" }])).toBe(true);
+    it("decision: allow も受け付ける", () => {
+      expect(validateConfig([{ command: "ls", decision: "allow", reason: "安全" }])).toBe(true);
     });
 
     it("空配列", () => {
@@ -45,24 +49,24 @@ describe("validateConfig", () => {
       expect(
         validateConfig([
           { command: "ls", reason: "a" },
-          { command: "rm", args: "x", decision: "block", reason: "b" },
+          { command: "rm", args: "x", decision: "deny", reason: "b" },
         ]),
       ).toBe(true);
     });
 
     it("ワイルドカードルール (args あり)", () => {
       expect(
-        validateConfig([{ command: "*", args: "node_modules", decision: "block", reason: "禁止" }]),
+        validateConfig([{ command: "*", args: "node_modules", decision: "deny", reason: "禁止" }]),
       ).toBe(true);
     });
   });
 
   describe("ワイルドカードルールエラー", () => {
     it('args なしの "*" を拒否', () => {
-      expect(validateConfig([{ command: "*", decision: "block", reason: "禁止" }])).toBe(false);
+      expect(validateConfig([{ command: "*", decision: "deny", reason: "禁止" }])).toBe(false);
       expect(errorMock).toHaveBeenCalledWith(
         'Config validation error at index 0: wildcard rule (command: "*") requires args',
-        { command: "*", decision: "block", reason: "禁止" },
+        { command: "*", decision: "deny", reason: "禁止" },
       );
     });
   });
@@ -132,7 +136,7 @@ describe("validateConfig", () => {
     it("decision が無効値を拒否", () => {
       expect(validateConfig([{ command: "ls", decision: "warn", reason: "x" }])).toBe(false);
       expect(errorMock).toHaveBeenCalledWith(
-        expect.stringContaining('decision must be "block" or "approve" when present'),
+        expect.stringContaining('decision must be "deny" or "allow" when present'),
         { command: "ls", decision: "warn", reason: "x" },
       );
     });
@@ -148,8 +152,8 @@ describe("validateConfig", () => {
         event: "preToolUse",
         tool: "WebFetch",
         domain: "example.com",
-        decision: "block",
-        reason: "block fetch",
+        decision: "deny",
+        reason: "deny fetch",
       };
       expect(validateConfig([oldRule])).toBe(false);
       // command が無いので最初に command エラーが先に出る
@@ -164,7 +168,7 @@ describe("validateConfig", () => {
         event: "preToolUse",
         tool: "Bash",
         command: "rm",
-        reason: "block rm",
+        reason: "deny rm",
       };
       expect(validateConfig([oldRule])).toBe(false);
       expect(errorMock).toHaveBeenCalledWith(
@@ -214,5 +218,70 @@ describe("validateConfig", () => {
         { command: "rm" },
       );
     });
+  });
+});
+
+describe("readConfig", () => {
+  let errorMock: ReturnType<typeof mock>;
+  let originalError: typeof console.error;
+  let dir: string;
+
+  beforeEach(() => {
+    errorMock = mock(() => {});
+    originalError = console.error;
+    console.error = errorMock as unknown as typeof console.error;
+    dir = mkdtempSync(join(tmpdir(), "hooks-config-test-"));
+  });
+
+  afterEach(() => {
+    console.error = originalError;
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("存在しないパスは undefined を返し read error を出す（catch 経路）", () => {
+    const path = join(dir, "missing.json");
+    expect(readConfig(path)).toBeUndefined();
+    expect(errorMock).toHaveBeenCalledWith(
+      expect.stringContaining(`Config read error for ${path}`),
+    );
+  });
+
+  it("不正な JSON は undefined を返し read error を出す（SyntaxError 経路）", () => {
+    const path = join(dir, "broken.json");
+    writeFileSync(path, "{ not valid json");
+    expect(readConfig(path)).toBeUndefined();
+    expect(errorMock).toHaveBeenCalledWith(
+      expect.stringContaining(`Config read error for ${path}`),
+    );
+  });
+
+  it("検証エラーの設定は undefined を返し validation failed を出す", () => {
+    const path = join(dir, "invalid-schema.json");
+    writeFileSync(path, JSON.stringify([{ command: "ls" }])); // reason 欠落
+    expect(readConfig(path)).toBeUndefined();
+    expect(errorMock).toHaveBeenCalledWith(`Config validation failed for ${path}`);
+  });
+
+  it("正常な設定はパースして返す", () => {
+    const path = join(dir, "valid.json");
+    const config: HookConfig = [{ command: "rm", decision: "deny", reason: "禁止" }];
+    writeFileSync(path, JSON.stringify(config));
+    expect(readConfig(path)).toEqual(config);
+  });
+});
+
+describe("formatError", () => {
+  it("string はそのまま返す", () => {
+    expect(formatError("そのままの文字列")).toBe("そのままの文字列");
+  });
+
+  it("Error は message を返す", () => {
+    expect(formatError(new Error("エラーメッセージ"))).toBe("エラーメッセージ");
+  });
+
+  it("string でも Error でもない値は String() で変換する", () => {
+    expect(formatError(42)).toBe("42");
+    expect(formatError(null)).toBe("null");
+    expect(formatError({ a: 1 })).toBe("[object Object]");
   });
 });

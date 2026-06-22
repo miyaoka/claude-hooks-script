@@ -42,7 +42,7 @@ export function readConfig(path: string): HookConfig | undefined {
  * catch で受ける unknown を表示用文字列に整える。
  * string ならそのまま、Error なら message、それ以外は最終手段で String() 変換する
  */
-function formatError(error: unknown): string {
+export function formatError(error: unknown): string {
   if (typeof error === "string") return error;
   if (error instanceof Error) return error.message;
   return String(error);
@@ -79,8 +79,8 @@ function checkBashRule(rule: unknown): string | null {
   if (r.args !== undefined && typeof r.args !== "string") {
     return "args must be a string when present";
   }
-  if (r.decision !== undefined && r.decision !== "block" && r.decision !== "approve") {
-    return 'decision must be "block" or "approve" when present';
+  if (r.decision !== undefined && r.decision !== "deny" && r.decision !== "allow") {
+    return 'decision must be "deny" or "allow" when present';
   }
   // argsなしの "*" は全コマンド無条件マッチになるため禁止
   if (r.command === WILDCARD_COMMAND && typeof r.args !== "string") {

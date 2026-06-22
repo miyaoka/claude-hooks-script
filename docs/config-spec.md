@@ -7,7 +7,7 @@
 - `command`: コマンド名（必須）。`"*"` を指定するとワイルドカードルールになる（後述）
 - `reason`: 判定理由（必須）
 - `args`: 引数パターン（正規表現または部分文字列）（オプション。ワイルドカードルールでは必須）
-- `decision`: `"block"` または `"approve"`（オプション。未指定の場合は reason のみ表示）
+- `decision`: `"deny"` または `"allow"`（オプション。未指定の場合は reason のみ表示）
 
 ### 設定例
 
@@ -16,12 +16,12 @@
   {
     "command": "rm",
     "args": "-rf\\s+~",
-    "decision": "block",
+    "decision": "deny",
     "reason": "ホームディレクトリの削除は禁止"
   },
   {
     "command": "ls",
-    "decision": "approve",
+    "decision": "allow",
     "reason": "lsは常に許可"
   }
 ]
@@ -56,14 +56,14 @@
   {
     "command": "*",
     "args": "node_modules",
-    "decision": "block",
+    "decision": "deny",
     "reason": "node_modulesを直接読むな。ghqでソースリポジトリを取得して調べろ"
   }
 ]
 ```
 
 - `args` は必須。args なしの `"*"` は全コマンド無条件マッチになるため validation error
-- マッチ結果は通常ルールと同じ土俵で `block > undefined > approve` の優先順位に参加する（ワイルドカードの block はコマンド別の approve に勝つ）
+- マッチ結果は通常ルールと同じ土俵で `deny > undefined > allow` の優先順位に参加する（ワイルドカードの deny はコマンド別の allow に勝つ）
 
 ## マッチングルールと優先順位
 
@@ -77,7 +77,7 @@
 - より具体的な設定（`args` あり）が一般的な設定（`args` なし）より優先される
 - 同じ具体度の設定は、配列の後の要素が前の要素を上書きする
 - **複数のルールがマッチする場合**: `decision` の強さで決定
-  - 強さの順序: `block` > `undefined` > `approve`
+  - 強さの順序: `deny` > `undefined` > `allow`
   - 安全側に倒す原則（より制限的な設定を優先）
 
 ### 上書きルール
@@ -91,24 +91,24 @@
 [
   {
     "command": "cat",
-    "decision": "approve",
+    "decision": "allow",
     "reason": "catコマンドは基本的に許可"
   },
   {
     "command": "cat",
     "args": "password|secret|\\.env",
-    "decision": "block",
+    "decision": "deny",
     "reason": "機密情報を含む可能性のあるファイルの閲覧は禁止"
   },
   {
     "command": "rm",
-    "decision": "block",
+    "decision": "deny",
     "reason": "rmコマンドはデフォルトで禁止"
   },
   {
     "command": "rm",
     "args": "\\.tmp$|\\.cache",
-    "decision": "approve",
+    "decision": "allow",
     "reason": "一時ファイルの削除は許可"
   }
 ]
@@ -126,13 +126,13 @@
   {
     "command": "rm",
     "args": "\\.log$",
-    "decision": "approve",
+    "decision": "allow",
     "reason": "ログファイルの削除は許可"
   },
   {
     "command": "rm",
     "args": "production",
-    "decision": "block",
+    "decision": "deny",
     "reason": "productionを含むパスの削除は禁止"
   }
 ]
@@ -141,8 +141,8 @@
 `rm production.log` の場合：
 
 - 両方のルールにマッチ
-- `approve` と `block` が競合
-- `block` > `approve` なので、**ブロックされる**（安全側に倒す）
+- `allow` と `deny` が競合
+- `deny` > `allow` なので、**ブロックされる**（安全側に倒す）
 
 ## 設定ファイルの読み込み
 
@@ -170,5 +170,5 @@ PreToolUse 以外の hook イベントや、PreToolUse でも Bash 以外のツ�
 
 - `command` / `reason` が string で必ず存在する
 - `args` が定義されていれば string
-- `decision` が定義されていれば `"block"` または `"approve"`
+- `decision` が定義されていれば `"deny"` または `"allow"`
 - ルール内のフィールドは `command` / `args` / `decision` / `reason` のみ。`event` / `tool` / `domain` / `query` 等の未知フィールドが含まれていれば error（旧スキーマがサイレントに無効化される事故を防ぐため）
