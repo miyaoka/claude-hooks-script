@@ -5,7 +5,27 @@ Claude Code 用の hook スクリプトを実装するプロジェクト
 ## 概要
 
 このプロジェクトは`bunx github:miyaoka/claude-hooks-script`で実行可能な Claude Code 用の hook スクリプトを提供する
-Claude Code の PreToolUse / Bash 実行をインターセプトし、ルールに基づいて許可/ブロックを判定する
+Claude Code の PreToolUse / Bash 実行をインターセプトし、ルールに基づいて公式 hook レスポンスを返す
+
+## 設計原則（最重要）
+
+**config は、公式 PreToolUse レスポンス（`hookSpecificOutput`）にマッチパターンを足しただけのもの。**
+
+- 1 ルール = マッチパターン（`command` / `args`、このリポジトリが公式に足す唯一の要素）＋ 公式 `hookSpecificOutput` のフィールドをそのまま宣言したもの
+- 公式 `hookSpecificOutput` のフィールド（`hookEventName` は固定で不要）:
+  - `permissionDecision`: `allow` / `deny` / `ask` / `defer`
+  - `permissionDecisionReason`: `allow` / `ask` はユーザー表示、`deny` は Claude 表示、`defer` は無視。`deny` / `ask` で必須、`allow` で任意
+  - `additionalContext`: モデルへ注入する文脈。`permissionDecision` と独立（併用可・単体可）。`defer` では無視されるため不可
+  - `updatedInput`: 実行前のツール入力を全置換（`allow` / `ask` のみ。Bash は `command` のみ）
+- フックの仕事 = マッチしたら、そのルールの公式フィールドを `hookSpecificOutput` に**素通し**で載せて返すだけ
+- フィールド間に独自のカップリングを作らない（例: 1 つの `reason` を `permissionDecision` の有無で `permissionDecisionReason` と `additionalContext` に振り分ける、は公式に無い構造であり禁止）
+
+唯一リポジトリ独自のロジックは、**複数ルールがマッチしたとき**（複合コマンド・重複マッチ）に単一レスポンスへ合成する処理:
+
+- `permissionDecision`: 公式の優先順位 `deny` > `defer` > `ask` > `allow` で採用＋その `permissionDecisionReason` / `updatedInput`
+- `additionalContext`: マッチした全ルールの値を集約（公式も複数値を全て配信する）。ただし `defer` 採用時は無視されるため付けない
+
+型は `src/types.ts` で公式部分（`PreToolUseHookOutput` ＝ permissionDecision で判別する union）とこのリポジトリ独自部分（`MatchPattern`）を分離し、`BashRule = MatchPattern & PreToolUseDecision` で表す。
 
 ## 技術スタック
 
@@ -55,8 +75,8 @@ TDD アプローチに従い、まずテストを書いてから実装する
 
 - Bashコマンドとargsによるルールマッチング
 - 正規表現または部分一致によるargsパターンマッチング
-- decision（block/approve）による実行制御
-- 複合コマンド（`&&` / `;` / `|`）の各サブコマンドを個別評価
+- マッチしたルールの公式フィールド（permissionDecision / permissionDecisionReason / additionalContext / updatedInput）を素通しで返す
+- 複合コマンド（`&&` / `;` / `|`）の各サブコマンドを個別評価し、複数マッチは合成（上記「設計原則」参照）
 - PreToolUse 以外、または Bash 以外のツールは素通し
 
 ### デバッグ機能

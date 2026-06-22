@@ -1,5 +1,9 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
-import { validateConfig } from "./config";
+import { formatError, readConfig, validateConfig } from "./config";
+import type { HookConfig } from "./types";
 
 describe("validateConfig", () => {
   let errorMock: ReturnType<typeof mock>;
@@ -16,53 +20,229 @@ describe("validateConfig", () => {
   });
 
   describe("正常系", () => {
-    it("最小ルール (command, reason)", () => {
-      expect(validateConfig([{ command: "ls", reason: "lsは許可" }])).toBe(true);
+    it("allow（reason なし）", () => {
+      expect(validateConfig([{ command: "ls", permissionDecision: "allow" }])).toBe(true);
     });
 
-    it("全フィールド指定 (block)", () => {
+    it("deny + reason", () => {
+      expect(
+        validateConfig([
+          { command: "rm", permissionDecision: "deny", permissionDecisionReason: "危険" },
+        ]),
+      ).toBe(true);
+    });
+
+    it("ask + reason", () => {
+      expect(
+        validateConfig([
+          { command: "psql", permissionDecision: "ask", permissionDecisionReason: "確認" },
+        ]),
+      ).toBe(true);
+    });
+
+    it("defer", () => {
+      expect(validateConfig([{ command: "ls", permissionDecision: "defer" }])).toBe(true);
+    });
+
+    it("additionalContext 単体（decision なし）", () => {
+      expect(validateConfig([{ command: "curl", additionalContext: "注意" }])).toBe(true);
+    });
+
+    it("allow + additionalContext", () => {
+      expect(
+        validateConfig([
+          { command: "psql", permissionDecision: "allow", additionalContext: "本番DB" },
+        ]),
+      ).toBe(true);
+    });
+
+    it("allow + updatedInput", () => {
       expect(
         validateConfig([
           {
-            command: "rm",
-            args: "-rf",
-            decision: "block",
-            reason: "危険",
+            command: "npm",
+            args: "test",
+            permissionDecision: "allow",
+            updatedInput: { command: "npm test --silent" },
           },
         ]),
       ).toBe(true);
     });
 
-    it("decision: approve も受け付ける", () => {
-      expect(validateConfig([{ command: "ls", decision: "approve", reason: "安全" }])).toBe(true);
-    });
-
-    it("空配列", () => {
-      expect(validateConfig([])).toBe(true);
-    });
-
-    it("複数ルール", () => {
+    it("allow + reason（公式上ユーザーに表示される）", () => {
       expect(
         validateConfig([
-          { command: "ls", reason: "a" },
-          { command: "rm", args: "x", decision: "block", reason: "b" },
+          { command: "ls", permissionDecision: "allow", permissionDecisionReason: "許可理由" },
+        ]),
+      ).toBe(true);
+    });
+
+    it("ask + updatedInput（書き換え後をユーザーに確認）", () => {
+      expect(
+        validateConfig([
+          {
+            command: "npm",
+            permissionDecision: "ask",
+            permissionDecisionReason: "確認",
+            updatedInput: { command: "npm test" },
+          },
         ]),
       ).toBe(true);
     });
 
     it("ワイルドカードルール (args あり)", () => {
       expect(
-        validateConfig([{ command: "*", args: "node_modules", decision: "block", reason: "禁止" }]),
+        validateConfig([
+          {
+            command: "*",
+            args: "node_modules",
+            permissionDecision: "deny",
+            permissionDecisionReason: "禁止",
+          },
+        ]),
       ).toBe(true);
+    });
+
+    it("空配列", () => {
+      expect(validateConfig([])).toBe(true);
     });
   });
 
-  describe("ワイルドカードルールエラー", () => {
+  describe("マッチパターンのエラー", () => {
     it('args なしの "*" を拒否', () => {
-      expect(validateConfig([{ command: "*", decision: "block", reason: "禁止" }])).toBe(false);
+      expect(
+        validateConfig([
+          { command: "*", permissionDecision: "deny", permissionDecisionReason: "x" },
+        ]),
+      ).toBe(false);
       expect(errorMock).toHaveBeenCalledWith(
-        'Config validation error at index 0: wildcard rule (command: "*") requires args',
-        { command: "*", decision: "block", reason: "禁止" },
+        expect.stringContaining('wildcard rule (command: "*") requires args'),
+        expect.anything(),
+      );
+    });
+
+    it("command 欠落を拒否", () => {
+      expect(validateConfig([{ permissionDecision: "allow" }])).toBe(false);
+      expect(errorMock).toHaveBeenCalledWith(
+        expect.stringContaining("command must be a string"),
+        expect.anything(),
+      );
+    });
+
+    it("args が非 string を拒否", () => {
+      expect(validateConfig([{ command: "ls", args: 123, permissionDecision: "allow" }])).toBe(
+        false,
+      );
+      expect(errorMock).toHaveBeenCalledWith(
+        expect.stringContaining("args must be a string when present"),
+        expect.anything(),
+      );
+    });
+  });
+
+  describe("公式レスポンスフィールドのエラー", () => {
+    it("permissionDecision の無効値を拒否", () => {
+      expect(validateConfig([{ command: "ls", permissionDecision: "warn" }])).toBe(false);
+      expect(errorMock).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'permissionDecision must be one of "allow" / "deny" / "ask" / "defer"',
+        ),
+        expect.anything(),
+      );
+    });
+
+    it("deny で reason 欠落を拒否", () => {
+      expect(validateConfig([{ command: "rm", permissionDecision: "deny" }])).toBe(false);
+      expect(errorMock).toHaveBeenCalledWith(
+        expect.stringContaining('permissionDecision "deny" requires permissionDecisionReason'),
+        expect.anything(),
+      );
+    });
+
+    it("ask で reason 欠落を拒否", () => {
+      expect(validateConfig([{ command: "psql", permissionDecision: "ask" }])).toBe(false);
+      expect(errorMock).toHaveBeenCalledWith(
+        expect.stringContaining('permissionDecision "ask" requires permissionDecisionReason'),
+        expect.anything(),
+      );
+    });
+
+    it("defer に reason を付けると拒否（公式上無視される）", () => {
+      expect(
+        validateConfig([
+          { command: "ls", permissionDecision: "defer", permissionDecisionReason: "意味なし" },
+        ]),
+      ).toBe(false);
+      expect(errorMock).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'permissionDecisionReason is only valid with permissionDecision "allow" / "deny" / "ask"',
+        ),
+        expect.anything(),
+      );
+    });
+
+    it("defer に additionalContext を付けると拒否（公式上無視される）", () => {
+      expect(
+        validateConfig([{ command: "ls", permissionDecision: "defer", additionalContext: "x" }]),
+      ).toBe(false);
+      expect(errorMock).toHaveBeenCalledWith(
+        expect.stringContaining('additionalContext is ignored with permissionDecision "defer"'),
+        expect.anything(),
+      );
+    });
+
+    it("空の permissionDecisionReason を拒否", () => {
+      expect(
+        validateConfig([
+          { command: "rm", permissionDecision: "deny", permissionDecisionReason: "" },
+        ]),
+      ).toBe(false);
+      expect(errorMock).toHaveBeenCalledWith(
+        expect.stringContaining("permissionDecisionReason must not be empty"),
+        expect.anything(),
+      );
+    });
+
+    it("空の additionalContext を拒否", () => {
+      expect(validateConfig([{ command: "ls", additionalContext: "" }])).toBe(false);
+      expect(errorMock).toHaveBeenCalledWith(
+        expect.stringContaining("additionalContext must not be empty"),
+        expect.anything(),
+      );
+    });
+
+    it("updatedInput を deny に付けると拒否（allow / ask のみ有効）", () => {
+      expect(
+        validateConfig([
+          {
+            command: "rm",
+            permissionDecision: "deny",
+            permissionDecisionReason: "x",
+            updatedInput: { command: "ls" },
+          },
+        ]),
+      ).toBe(false);
+      expect(errorMock).toHaveBeenCalledWith(
+        expect.stringContaining('updatedInput is only valid with permissionDecision "allow"'),
+        expect.anything(),
+      );
+    });
+
+    it("updatedInput.command 欠落を拒否", () => {
+      expect(
+        validateConfig([{ command: "npm", permissionDecision: "allow", updatedInput: {} }]),
+      ).toBe(false);
+      expect(errorMock).toHaveBeenCalledWith(
+        expect.stringContaining("updatedInput.command must be a non-empty string"),
+        expect.anything(),
+      );
+    });
+
+    it("permissionDecision も additionalContext も無いルールを拒否", () => {
+      expect(validateConfig([{ command: "ls" }])).toBe(false);
+      expect(errorMock).toHaveBeenCalledWith(
+        expect.stringContaining("rule must set permissionDecision or additionalContext"),
+        expect.anything(),
       );
     });
   });
@@ -73,16 +253,6 @@ describe("validateConfig", () => {
       expect(errorMock).toHaveBeenCalledWith("Config validation error: Config must be an array");
     });
 
-    it("null を拒否", () => {
-      expect(validateConfig(null)).toBe(false);
-    });
-
-    it("文字列を拒否", () => {
-      expect(validateConfig("not array")).toBe(false);
-    });
-  });
-
-  describe("ルール構造エラー", () => {
     it("配列内 null を拒否", () => {
       expect(validateConfig([null])).toBe(false);
       expect(errorMock).toHaveBeenCalledWith(
@@ -90,112 +260,24 @@ describe("validateConfig", () => {
         null,
       );
     });
-
-    it("配列内が array のルールを拒否", () => {
-      expect(validateConfig([[]])).toBe(false);
-      expect(errorMock).toHaveBeenCalledWith(
-        expect.stringContaining("rule must be a plain object"),
-        [],
-      );
-    });
-
-    it("command 欠落を拒否", () => {
-      expect(validateConfig([{ reason: "no command" }])).toBe(false);
-      expect(errorMock).toHaveBeenCalledWith(expect.stringContaining("command must be a string"), {
-        reason: "no command",
-      });
-    });
-
-    it("command が非 string を拒否", () => {
-      expect(validateConfig([{ command: 123, reason: "x" }])).toBe(false);
-      expect(errorMock).toHaveBeenCalledWith(expect.stringContaining("command must be a string"), {
-        command: 123,
-        reason: "x",
-      });
-    });
-
-    it("reason 欠落を拒否", () => {
-      expect(validateConfig([{ command: "ls" }])).toBe(false);
-      expect(errorMock).toHaveBeenCalledWith(expect.stringContaining("reason must be a string"), {
-        command: "ls",
-      });
-    });
-
-    it("args が非 string を拒否", () => {
-      expect(validateConfig([{ command: "ls", args: 123, reason: "x" }])).toBe(false);
-      expect(errorMock).toHaveBeenCalledWith(
-        expect.stringContaining("args must be a string when present"),
-        { command: "ls", args: 123, reason: "x" },
-      );
-    });
-
-    it("decision が無効値を拒否", () => {
-      expect(validateConfig([{ command: "ls", decision: "warn", reason: "x" }])).toBe(false);
-      expect(errorMock).toHaveBeenCalledWith(
-        expect.stringContaining('decision must be "block" or "approve" when present'),
-        { command: "ls", decision: "warn", reason: "x" },
-      );
-    });
-
-    it("空オブジェクト {} を拒否", () => {
-      expect(validateConfig([{}])).toBe(false);
-    });
   });
 
   describe("旧スキーマ検出 (未知フィールド)", () => {
-    it("v0 WebFetch ルール (event/tool/domain) を拒否し旧スキーマ誘導文を出す", () => {
-      const oldRule = {
-        event: "preToolUse",
-        tool: "WebFetch",
-        domain: "example.com",
-        decision: "block",
-        reason: "block fetch",
-      };
+    it("旧 decision/reason を未知フィールドとして拒否し移行を促す", () => {
+      const oldRule = { command: "rm", decision: "deny", reason: "rm禁止" };
       expect(validateConfig([oldRule])).toBe(false);
-      // command が無いので最初に command エラーが先に出る
       expect(errorMock).toHaveBeenCalledWith(
-        expect.stringContaining("command must be a string"),
+        expect.stringContaining("unknown fields: decision, reason"),
         oldRule,
       );
     });
 
     it("v0 Bash ルール (event/tool 付き) を未知フィールドエラーで拒否", () => {
-      const oldRule = {
-        event: "preToolUse",
-        tool: "Bash",
-        command: "rm",
-        reason: "block rm",
-      };
+      const oldRule = { command: "rm", event: "preToolUse", tool: "Bash", additionalContext: "x" };
       expect(validateConfig([oldRule])).toBe(false);
       expect(errorMock).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "unknown fields: event, tool — may be using old schema; remove event/tool/domain/query",
-        ),
+        expect.stringContaining("unknown fields: event, tool"),
         oldRule,
-      );
-    });
-
-    it("単一の未知フィールドも拒否", () => {
-      expect(validateConfig([{ command: "ls", reason: "x", note: "メモ" }])).toBe(false);
-      expect(errorMock).toHaveBeenCalledWith(expect.stringContaining("unknown fields: note"), {
-        command: "ls",
-        reason: "x",
-        note: "メモ",
-      });
-    });
-
-    it("複数の未知フィールドをカンマ区切りで列挙", () => {
-      const rule = {
-        command: "ls",
-        reason: "x",
-        event: "preToolUse",
-        tool: "Bash",
-        domain: "example.com",
-      };
-      expect(validateConfig([rule])).toBe(false);
-      expect(errorMock).toHaveBeenCalledWith(
-        expect.stringContaining("unknown fields: event, tool, domain"),
-        rule,
       );
     });
   });
@@ -204,9 +286,9 @@ describe("validateConfig", () => {
     it("複数ルールで invalid なものだけ index 付きでエラーを出す", () => {
       expect(
         validateConfig([
-          { command: "ls", reason: "ok" },
-          { command: "rm" }, // reason 欠落
-          { command: "cat", reason: "ok" },
+          { command: "ls", permissionDecision: "allow" },
+          { command: "rm" }, // 効果なし
+          { command: "cat", permissionDecision: "allow" },
         ]),
       ).toBe(false);
       expect(errorMock).toHaveBeenCalledWith(
@@ -214,5 +296,72 @@ describe("validateConfig", () => {
         { command: "rm" },
       );
     });
+  });
+});
+
+describe("readConfig", () => {
+  let errorMock: ReturnType<typeof mock>;
+  let originalError: typeof console.error;
+  let dir: string;
+
+  beforeEach(() => {
+    errorMock = mock(() => {});
+    originalError = console.error;
+    console.error = errorMock as unknown as typeof console.error;
+    dir = mkdtempSync(join(tmpdir(), "hooks-config-test-"));
+  });
+
+  afterEach(() => {
+    console.error = originalError;
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("存在しないパスは undefined を返し read error を出す（catch 経路）", () => {
+    const path = join(dir, "missing.json");
+    expect(readConfig(path)).toBeUndefined();
+    expect(errorMock).toHaveBeenCalledWith(
+      expect.stringContaining(`Config read error for ${path}`),
+    );
+  });
+
+  it("不正な JSON は undefined を返し read error を出す（SyntaxError 経路）", () => {
+    const path = join(dir, "broken.json");
+    writeFileSync(path, "{ not valid json");
+    expect(readConfig(path)).toBeUndefined();
+    expect(errorMock).toHaveBeenCalledWith(
+      expect.stringContaining(`Config read error for ${path}`),
+    );
+  });
+
+  it("検証エラーの設定は undefined を返し validation failed を出す", () => {
+    const path = join(dir, "invalid-schema.json");
+    writeFileSync(path, JSON.stringify([{ command: "ls" }])); // 効果なし
+    expect(readConfig(path)).toBeUndefined();
+    expect(errorMock).toHaveBeenCalledWith(`Config validation failed for ${path}`);
+  });
+
+  it("正常な設定はパースして返す", () => {
+    const path = join(dir, "valid.json");
+    const config: HookConfig = [
+      { command: "rm", permissionDecision: "deny", permissionDecisionReason: "禁止" },
+    ];
+    writeFileSync(path, JSON.stringify(config));
+    expect(readConfig(path)).toEqual(config);
+  });
+});
+
+describe("formatError", () => {
+  it("string はそのまま返す", () => {
+    expect(formatError("そのままの文字列")).toBe("そのままの文字列");
+  });
+
+  it("Error は message を返す", () => {
+    expect(formatError(new Error("エラーメッセージ"))).toBe("エラーメッセージ");
+  });
+
+  it("string でも Error でもない値は String() で変換する", () => {
+    expect(formatError(42)).toBe("42");
+    expect(formatError(null)).toBe("null");
+    expect(formatError({ a: 1 })).toBe("[object Object]");
   });
 });

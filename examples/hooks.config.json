@@ -1,40 +1,43 @@
 [
   {
     "command": "ls",
-    "decision": "approve",
-    "reason": "安全なコマンド"
+    "permissionDecision": "allow"
   },
   {
     "command": "rm",
     "args": "-rf\\s+~",
-    "decision": "block",
-    "reason": "ホームディレクトリの削除は禁止"
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "ホームディレクトリの削除は禁止"
   },
   {
     "command": "curl",
-    "decision": "block",
-    "reason": "curlの代わりにWebFetchツールを使用してください"
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "curlの代わりにWebFetchツールを使用してください"
   },
   {
     "command": "pnpm",
-    "decision": "approve",
-    "reason": "pnpmコマンドはデフォルトで使用許可"
+    "permissionDecision": "allow"
   },
   {
     "command": "pnpm",
     "args": "^(run )?dev",
-    "decision": "block",
-    "reason": "pnpm run devはclaudeは確認できないので使用不可"
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "pnpm run devはclaudeは確認できないので使用不可"
   },
   {
-    "command": "timeout",
-    "decision": "block",
-    "reason": "お前はtimeoutコマンドで何をするつもりだ？言ってみろ"
+    "command": "psql",
+    "permissionDecision": "allow",
+    "additionalContext": "本番DBに接続している。スキーマ変更は事前確認が必要"
+  },
+  {
+    "command": "git",
+    "args": "commit",
+    "additionalContext": "コミット前に lint と test を通すこと"
   },
   {
     "command": "find",
     "args": "(?:^|\\s)[\"']?/[\"']?(?:\\s|$)",
-    "decision": "block",
-    "reason": "ルート直下のfindはユーザー確認が必要なディレクトリにまで降りてポップアップが出るので禁止。具体的なディレクトリを指定すること"
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "ルート直下のfindはユーザー確認が必要なディレクトリにまで降りてポップアップが出るので禁止。具体的なディレクトリを指定すること"
   }
 ]

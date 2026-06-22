@@ -43,13 +43,15 @@ hook の動作を制御する設定ファイルを作成する。以下のいず
 - `~/.claude/hooks.config.json`（ユーザー共通設定）
 - `{プロジェクトルート}/.claude/hooks.config.json`（プロジェクト固有設定）
 
+ルールは「マッチパターン（`command` / `args`）＋ 公式 `hookSpecificOutput` のフィールド」。マッチしたら公式フィールドをそのまま返す。
+
 ```json
 [
   {
     "command": "rm",
     "args": "-rf",
-    "decision": "block",
-    "reason": "危険なrmコマンドの実行をブロック"
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "危険なrmコマンドの実行をブロック"
   }
 ]
 ```
