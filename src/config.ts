@@ -5,7 +5,15 @@ import { WILDCARD_COMMAND } from "./types";
 import type { HookConfig } from "./types";
 
 const CONFIG_FILE = "hooks.config.json";
-const ALLOWED_RULE_KEYS = new Set(["command", "args", "decision", "reason"]);
+const ALLOWED_RULE_KEYS = new Set([
+  "command",
+  "args",
+  "permissionDecision",
+  "permissionDecisionReason",
+  "additionalContext",
+  "updatedInput",
+]);
+const PERMISSION_DECISIONS = new Set(["allow", "deny", "ask", "defer"]);
 
 /**
  * ユーザー設定とプロジェクト設定をマージしてロードする
@@ -74,24 +82,81 @@ function checkBashRule(rule: unknown): string | null {
   }
   const r = rule as Record<string, unknown>;
 
+  // --- マッチパターン（このリポジトリ独自） ---
   if (typeof r.command !== "string") return "command must be a string";
-  if (typeof r.reason !== "string") return "reason must be a string";
-  // 空 reason は deny の permissionDecisionReason が空になりブロック理由がモデルに伝わらないため禁止
-  if (r.reason === "") return "reason must not be empty";
   if (r.args !== undefined && typeof r.args !== "string") {
     return "args must be a string when present";
-  }
-  if (r.decision !== undefined && r.decision !== "deny" && r.decision !== "allow") {
-    return 'decision must be "deny" or "allow" when present';
   }
   // argsなしの "*" は全コマンド無条件マッチになるため禁止
   if (r.command === WILDCARD_COMMAND && typeof r.args !== "string") {
     return 'wildcard rule (command: "*") requires args';
   }
 
+  // 旧スキーマ（decision/reason/event/tool 等）を移行ガイドとして先に検出する
   const unknown = Object.keys(r).filter((k) => !ALLOWED_RULE_KEYS.has(k));
   if (unknown.length > 0) {
-    return `unknown fields: ${unknown.join(", ")} — may be using old schema; remove event/tool/domain/query`;
+    return `unknown fields: ${unknown.join(", ")} — may be using old schema; remove decision/reason/event/tool/domain/query`;
+  }
+
+  // --- 公式レスポンスフィールド ---
+  const decisionError = checkDecisionFields(r);
+  if (decisionError !== null) return decisionError;
+
+  return null;
+}
+
+/**
+ * 公式レスポンスフィールドを公式の制約どおりに検証する。
+ * - permissionDecision: allow / deny / ask / defer
+ * - permissionDecisionReason: deny / ask で必須、それ以外では不可（公式上 allow / defer では非表示）
+ * - additionalContext: 非空文字列
+ * - updatedInput: allow のみ、{ command: 非空文字列 }
+ * - ルールは permissionDecision か additionalContext の少なくとも一方を持つ
+ */
+function checkDecisionFields(r: Record<string, unknown>): string | null {
+  const decision = r.permissionDecision;
+  if (
+    decision !== undefined &&
+    (typeof decision !== "string" || !PERMISSION_DECISIONS.has(decision))
+  ) {
+    return 'permissionDecision must be one of "allow" / "deny" / "ask" / "defer" when present';
+  }
+
+  const needsReason = decision === "deny" || decision === "ask";
+  if (r.permissionDecisionReason !== undefined) {
+    if (typeof r.permissionDecisionReason !== "string") {
+      return "permissionDecisionReason must be a string";
+    }
+    if (r.permissionDecisionReason === "") return "permissionDecisionReason must not be empty";
+    if (!needsReason) {
+      return 'permissionDecisionReason is only valid with permissionDecision "deny" or "ask"';
+    }
+  } else if (needsReason) {
+    return `permissionDecision "${decision}" requires permissionDecisionReason`;
+  }
+
+  if (r.additionalContext !== undefined) {
+    if (typeof r.additionalContext !== "string") return "additionalContext must be a string";
+    if (r.additionalContext === "") return "additionalContext must not be empty";
+  }
+
+  if (r.updatedInput !== undefined) {
+    if (decision !== "allow") return 'updatedInput is only valid with permissionDecision "allow"';
+    if (
+      typeof r.updatedInput !== "object" ||
+      r.updatedInput === null ||
+      Array.isArray(r.updatedInput)
+    ) {
+      return "updatedInput must be a plain object";
+    }
+    const command = (r.updatedInput as Record<string, unknown>).command;
+    if (typeof command !== "string" || command === "") {
+      return "updatedInput.command must be a non-empty string";
+    }
+  }
+
+  if (decision === undefined && r.additionalContext === undefined) {
+    return "rule must set permissionDecision or additionalContext";
   }
 
   return null;

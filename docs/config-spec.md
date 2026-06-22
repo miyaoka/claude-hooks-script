@@ -1,16 +1,28 @@
 # 設定ファイル仕様
 
-このスクリプトは Claude Code の **PreToolUse / Bash** 実行時のチェックに特化している。設定はBashルールの配列。
+このスクリプトは Claude Code の **PreToolUse / Bash** 実行時のチェックに特化している。設定は Bash ルールの配列。
+
+**1 ルール = マッチパターン（このリポジトリ独自）＋ 公式 `hookSpecificOutput` のフィールド（素通し）。** マッチしたら、そのルールに書かれた公式フィールドをそのまま返す。
 
 ## ルールのフィールド
 
-- `command`: コマンド名（必須）。`"*"` を指定するとワイルドカードルールになる（後述）
-- `reason`: 判定理由（必須）
-- `args`: 引数パターン（正規表現または部分文字列）（オプション。ワイルドカードルールでは必須）
-- `decision`: `"deny"` または `"allow"`（オプション。未指定の場合は判定せず、reason を `additionalContext` としてモデルへ渡す＝ブロックも許可もしない警告用途。ユーザー画面には出ない）
+### マッチパターン（このリポジトリが公式に足す部分）
 
-> [!NOTE]
-> `decision` 省略ルールの `reason` は `additionalContext` 経由でモデルに渡るため、命令文ではなく事実の記述で書く。命令調は prompt-injection 防御で握り潰されうる（`claude-hooks-spec.md` の additionalContext 節を参照）。`deny` / `allow` の `reason` は `permissionDecisionReason` に乗るためこの制約は受けない。
+- `command`: コマンド名（必須）。`"*"` を指定するとワイルドカードルールになる（後述）
+- `args`: 引数パターン（正規表現または部分文字列）（オプション。ワイルドカードルールでは必須）
+
+### 公式レスポンスフィールド（[PreToolUse decision control](https://code.claude.com/docs/en/hooks#pretooluse-decision-control) の素通し）
+
+- `permissionDecision`: `"allow"` / `"deny"` / `"ask"` / `"defer"`
+  - `allow`: 通常の権限フローをスキップして許可
+  - `deny`: ブロック。`permissionDecisionReason` が Claude に表示される
+  - `ask`: ユーザーの権限ダイアログにエスカレーション
+  - `defer`: 権限判定をせず通常フローに委譲
+- `permissionDecisionReason`: `deny` / `ask` の理由。**この 2 値では必須**。`allow` / `defer` では公式上表示されないため**指定不可**
+- `additionalContext`: モデルへ注入する文脈。`permissionDecision` と独立し、どの decision とも併用でき、単体でも指定できる
+- `updatedInput`: 実行前に Bash の command を差し替える（`{ "command": "..." }`）。`permissionDecision: "allow"` のときのみ指定可
+
+ルールは `permissionDecision` か `additionalContext` の少なくとも一方を持つ必要がある。
 
 ### 設定例
 
@@ -19,16 +31,28 @@
   {
     "command": "rm",
     "args": "-rf\\s+~",
-    "decision": "deny",
-    "reason": "ホームディレクトリの削除は禁止"
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "ホームディレクトリの削除は禁止"
   },
   {
     "command": "ls",
-    "decision": "allow",
-    "reason": "lsは常に許可"
+    "permissionDecision": "allow"
+  },
+  {
+    "command": "psql",
+    "permissionDecision": "allow",
+    "additionalContext": "本番DBに接続している"
+  },
+  {
+    "command": "git",
+    "args": "commit",
+    "additionalContext": "コミット前に lint と test を通すこと"
   }
 ]
 ```
+
+> [!NOTE]
+> `additionalContext` の文字列は命令文ではなく事実の記述で書く。命令調は prompt-injection 防御で握り潰されうる（`claude-hooks-spec.md` の additionalContext 節を参照）。`permissionDecisionReason` はこの制約を受けない。
 
 ## Bashコマンドの処理
 
@@ -39,7 +63,7 @@
 - クォート内の区切り文字はリテラル扱い
 - redirect 構文（`>&2` / `2>&1` / `&>` / `&>>` など）の `&` は分離しない
 - 各コマンドをコマンド名と引数に分解
-- ルールと照合し、マッチしたら対応する decision を返す
+- ルールと照合し、マッチしたルールの公式フィールドを返す
 
 例：
 
@@ -59,93 +83,51 @@
   {
     "command": "*",
     "args": "node_modules",
-    "decision": "deny",
-    "reason": "node_modulesを直接読むな。ghqでソースリポジトリを取得して調べろ"
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "node_modulesを直接読むな。ghqでソースリポジトリを取得して調べろ"
   }
 ]
 ```
 
 - `args` は必須。args なしの `"*"` は全コマンド無条件マッチになるため validation error
-- マッチ結果は通常ルールと同じ土俵で `deny > undefined > allow` の優先順位に参加する（ワイルドカードの deny はコマンド別の allow に勝つ）
+- マッチ結果は通常ルールと同じ土俵で合成に参加する（ワイルドカードの deny はコマンド別の allow に勝つ）
 
-## マッチングルールと優先順位
+## マッチングと合成
 
-### 基本ルール
+### マッチ
 
 - **デフォルト設定**: `args` なしの設定はそのコマンドのデフォルト動作を定義
 - **特定条件の設定**: `args` ありの設定は特定の引数パターンに対する動作を定義
-
-### 優先順位
-
 - より具体的な設定（`args` あり）が一般的な設定（`args` なし）より優先される
-- 同じ具体度の設定は、配列の後の要素が前の要素を上書きする
-- **複数のルールがマッチする場合**: `decision` の強さで決定
-  - 強さの順序: `deny` > `undefined` > `allow`
-  - 安全側に倒す原則（より制限的な設定を優先）
+- 同じ具体度の設定は、配列の後の要素が前の要素を上書きする（`command` と `args` の両方が同一の場合のみ）
 
-### 上書きルール
+### 合成（複数ルールがマッチしたとき）
 
-- **`args` なしの同じ `command`**: 配列の後者で上書き
-- **`args` ありの設定**: `command` と `args` の両方が同一の場合のみ、配列の後者で上書き
+単一の公式レスポンスへまとめる。
 
-### 設定例
+- `permissionDecision`: 最も制限的なルールを採用し、その `permissionDecisionReason` / `updatedInput` を引き継ぐ
+  - 強さの順序: `deny` > `ask` > `allow` > `defer`（安全側に倒す）
+- `additionalContext`: マッチした全ルールの値を改行で連結して集約（公式も複数値を全配信する）
 
-```json
-[
-  {
-    "command": "cat",
-    "decision": "allow",
-    "reason": "catコマンドは基本的に許可"
-  },
-  {
-    "command": "cat",
-    "args": "password|secret|\\.env",
-    "decision": "deny",
-    "reason": "機密情報を含む可能性のあるファイルの閲覧は禁止"
-  },
-  {
-    "command": "rm",
-    "decision": "deny",
-    "reason": "rmコマンドはデフォルトで禁止"
-  },
-  {
-    "command": "rm",
-    "args": "\\.tmp$|\\.cache",
-    "decision": "allow",
-    "reason": "一時ファイルの削除は許可"
-  }
-]
-```
-
-この例では：
-
-- `cat` は基本的に許可されるが、パスワードや秘密情報を含むファイルはブロック
-- `rm` は基本的に禁止されるが、一時ファイルの削除は許可
-
-### 複数マッチの例
+### 例
 
 ```json
 [
   {
     "command": "rm",
     "args": "\\.log$",
-    "decision": "allow",
-    "reason": "ログファイルの削除は許可"
+    "permissionDecision": "allow"
   },
   {
     "command": "rm",
     "args": "production",
-    "decision": "deny",
-    "reason": "productionを含むパスの削除は禁止"
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "productionを含むパスの削除は禁止"
   }
 ]
 ```
 
-`rm production.log` の場合：
-
-- 両方のルールにマッチ
-- `allow` と `deny` が競合
-- `deny` > `allow` なので、**ブロックされる**（安全側に倒す）
+`rm production.log` の場合、両方にマッチし `allow` と `deny` が競合する。`deny` > `allow` なので**ブロックされる**。
 
 ## 設定ファイルの読み込み
 
@@ -171,7 +153,11 @@ PreToolUse 以外の hook イベントや、PreToolUse でも Bash 以外のツ�
 
 設定ファイルは厳格に検証される。次のいずれかが満たされない場合は validation error で起動失敗する：
 
-- `command` / `reason` が string で必ず存在する
-- `args` が定義されていれば string
-- `decision` が定義されていれば `"deny"` または `"allow"`
-- ルール内のフィールドは `command` / `args` / `decision` / `reason` のみ。`event` / `tool` / `domain` / `query` 等の未知フィールドが含まれていれば error（旧スキーマがサイレントに無効化される事故を防ぐため）
+- `command` が string で必ず存在する
+- `args` が定義されていれば string。`command: "*"` は `args` 必須
+- `permissionDecision` が定義されていれば `"allow"` / `"deny"` / `"ask"` / `"defer"`
+- `permissionDecisionReason` は `deny` / `ask` で必須、それ以外では指定不可。空文字列は不可
+- `additionalContext` が定義されていれば非空 string
+- `updatedInput` は `permissionDecision: "allow"` のときのみ、`{ command: 非空 string }` の形
+- ルールは `permissionDecision` か `additionalContext` の少なくとも一方を持つ
+- ルール内のフィールドは上記のみ。`decision` / `reason` / `event` / `tool` / `domain` / `query` 等の未知フィールドが含まれていれば error（旧スキーマがサイレントに無効化される事故を防ぐため）
