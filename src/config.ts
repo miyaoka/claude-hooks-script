@@ -33,9 +33,19 @@ export function readConfig(path: string): HookConfig | undefined {
     console.error(`Config validation failed for ${path}`);
     return undefined;
   } catch (error) {
-    console.error(`Config read error for ${path}: ${error}`);
+    console.error(`Config read error for ${path}: ${formatError(error)}`);
     return undefined;
   }
+}
+
+/**
+ * catch で受ける unknown を表示用文字列に整える。
+ * string ならそのまま、Error なら message、それ以外は最終手段で String() 変換する
+ */
+function formatError(error: unknown): string {
+  if (typeof error === "string") return error;
+  if (error instanceof Error) return error.message;
+  return String(error);
 }
 
 /**
