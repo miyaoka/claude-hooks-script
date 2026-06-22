@@ -2,39 +2,41 @@
 // 公式 PreToolUse レスポンス型（hookSpecificOutput）
 // https://code.claude.com/docs/en/hooks#pretooluse-decision-control
 //
-// permissionDecision で判別する discriminated union。
-// 公式の制約（deny/ask は reason 必須、allow/defer は reason 非表示、
-// updatedInput は allow の例にのみ登場）を型レベルで表現し、
-// 不正な組み合わせ（allow + reason 等）を表現不能にする。
+// permissionDecision で判別する discriminated union。公式の制約を型で表現する:
+// - permissionDecisionReason: allow / ask はユーザー表示、deny は Claude 表示、defer は無視。
+//   deny / ask では必須、allow では任意、defer / なしでは不可
+// - updatedInput: allow / ask のみ（tool_input 全体を置換。Bash は command のみ）
+// - additionalContext: defer では無視されるため defer 以外で指定する
 // ============================================================
 
 export type PermissionDecision = "allow" | "deny" | "ask" | "defer";
 
-// allow: ツールを許可。実行前の入力差し替え（updatedInput）と文脈注入を伴える。reason は非表示なので持たない
+// allow: 許可。reason（ユーザー表示・任意）、入力差し替え、文脈注入を伴える
 type AllowDecision = {
   permissionDecision: "allow";
+  permissionDecisionReason?: string;
   updatedInput?: { command: string };
   additionalContext?: string;
 };
 
-// deny: ツールをブロック。reason は Claude に表示されるため必須
+// deny: ブロック。reason は Claude に表示されるため必須
 type DenyDecision = {
   permissionDecision: "deny";
   permissionDecisionReason: string;
   additionalContext?: string;
 };
 
-// ask: ユーザーにダイアログでエスカレーション。reason はユーザーに表示されるため必須
+// ask: ユーザーにダイアログでエスカレーション。reason 必須。入力差し替えも伴える
 type AskDecision = {
   permissionDecision: "ask";
   permissionDecisionReason: string;
+  updatedInput?: { command: string };
   additionalContext?: string;
 };
 
-// defer: 通常の権限フローに委譲（判定しない）。reason は非表示なので持たない
+// defer: 通常の権限フローに委譲。reason / additionalContext / updatedInput はすべて無視されるため持たない
 type DeferDecision = {
   permissionDecision: "defer";
-  additionalContext?: string;
 };
 
 // permissionDecision なし: 判定せず文脈のみ注入

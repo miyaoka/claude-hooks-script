@@ -69,6 +69,27 @@ describe("validateConfig", () => {
       ).toBe(true);
     });
 
+    it("allow + reason（公式上ユーザーに表示される）", () => {
+      expect(
+        validateConfig([
+          { command: "ls", permissionDecision: "allow", permissionDecisionReason: "許可理由" },
+        ]),
+      ).toBe(true);
+    });
+
+    it("ask + updatedInput（書き換え後をユーザーに確認）", () => {
+      expect(
+        validateConfig([
+          {
+            command: "npm",
+            permissionDecision: "ask",
+            permissionDecisionReason: "確認",
+            updatedInput: { command: "npm test" },
+          },
+        ]),
+      ).toBe(true);
+    });
+
     it("ワイルドカードルール (args あり)", () => {
       expect(
         validateConfig([
@@ -146,16 +167,26 @@ describe("validateConfig", () => {
       );
     });
 
-    it("allow に reason を付けると拒否（公式上非表示）", () => {
+    it("defer に reason を付けると拒否（公式上無視される）", () => {
       expect(
         validateConfig([
-          { command: "ls", permissionDecision: "allow", permissionDecisionReason: "意味なし" },
+          { command: "ls", permissionDecision: "defer", permissionDecisionReason: "意味なし" },
         ]),
       ).toBe(false);
       expect(errorMock).toHaveBeenCalledWith(
         expect.stringContaining(
-          'permissionDecisionReason is only valid with permissionDecision "deny" or "ask"',
+          'permissionDecisionReason is only valid with permissionDecision "allow" / "deny" / "ask"',
         ),
+        expect.anything(),
+      );
+    });
+
+    it("defer に additionalContext を付けると拒否（公式上無視される）", () => {
+      expect(
+        validateConfig([{ command: "ls", permissionDecision: "defer", additionalContext: "x" }]),
+      ).toBe(false);
+      expect(errorMock).toHaveBeenCalledWith(
+        expect.stringContaining('additionalContext is ignored with permissionDecision "defer"'),
         expect.anything(),
       );
     });
@@ -180,7 +211,7 @@ describe("validateConfig", () => {
       );
     });
 
-    it("updatedInput を allow 以外に付けると拒否", () => {
+    it("updatedInput を deny に付けると拒否（allow / ask のみ有効）", () => {
       expect(
         validateConfig([
           {

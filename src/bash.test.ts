@@ -61,6 +61,15 @@ describe("checkBashCommand", () => {
       );
     });
 
+    it("allow + reason（ユーザー表示）も素通しする", () => {
+      const rules: BashRule[] = [
+        { command: "ls", permissionDecision: "allow", permissionDecisionReason: "lsは許可" },
+      ];
+      expect(checkBashCommand(createBashInput("ls -la"), rules)).toEqual(
+        res({ permissionDecision: "allow", permissionDecisionReason: "lsは許可" }),
+      );
+    });
+
     it("ask は reason 付きで返す", () => {
       const rules: BashRule[] = [
         {
@@ -106,7 +115,7 @@ describe("checkBashCommand", () => {
   });
 
   describe("合成（複数マッチ）", () => {
-    it("最も制限的を採用: deny > ask > allow", () => {
+    it("優先順位 deny > defer > ask > allow で採用する", () => {
       const rules: BashRule[] = [
         { command: "echo", args: "safe", permissionDecision: "allow" },
         {
@@ -115,6 +124,7 @@ describe("checkBashCommand", () => {
           permissionDecision: "ask",
           permissionDecisionReason: "確認",
         },
+        { command: "echo", args: "later", permissionDecision: "defer" },
         {
           command: "echo",
           args: "danger",
@@ -123,14 +133,28 @@ describe("checkBashCommand", () => {
         },
       ];
 
-      expect(checkBashCommand(createBashInput("echo safe wait danger"), rules)).toEqual(
+      expect(checkBashCommand(createBashInput("echo safe wait later danger"), rules)).toEqual(
         res({ permissionDecision: "deny", permissionDecisionReason: "危険" }),
+      );
+      // defer は ask / allow より優先される
+      expect(checkBashCommand(createBashInput("echo safe wait later"), rules)).toEqual(
+        res({ permissionDecision: "defer" }),
       );
       expect(checkBashCommand(createBashInput("echo safe wait"), rules)).toEqual(
         res({ permissionDecision: "ask", permissionDecisionReason: "確認" }),
       );
       expect(checkBashCommand(createBashInput("echo safe"), rules)).toEqual(
         res({ permissionDecision: "allow" }),
+      );
+    });
+
+    it("defer 採用時は additionalContext を付けない（公式上無視される）", () => {
+      const rules: BashRule[] = [
+        { command: "echo", args: "ctx", additionalContext: "注意" },
+        { command: "echo", args: "later", permissionDecision: "defer" },
+      ];
+      expect(checkBashCommand(createBashInput("echo ctx later"), rules)).toEqual(
+        res({ permissionDecision: "defer" }),
       );
     });
 

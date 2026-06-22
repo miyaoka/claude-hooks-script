@@ -117,25 +117,32 @@ function collectSpecificRules(
   return matched;
 }
 
-// permissionDecision の制限の強さ（小さいほど制限的）
+// permissionDecision の優先順位（公式: deny > defer > ask > allow。小さいほど優先）
 const DECISION_RANK: Record<PermissionDecision, number> = {
   deny: 0,
-  ask: 1,
-  allow: 2,
-  defer: 3,
+  defer: 1,
+  ask: 2,
+  allow: 3,
 };
 
 /**
  * マッチした複数ルールの公式フィールドを単一レスポンスへ合成する。
- * - permissionDecision: 最も制限的なルールを採用し、その permissionDecisionReason / updatedInput を引き継ぐ
- * - additionalContext: マッチした全ルールの値を集約（公式も複数値を全配信する）
+ * - permissionDecision: 優先順位 deny > defer > ask > allow で採用し、その reason / updatedInput を引き継ぐ
+ * - additionalContext: マッチした全ルールの値を集約（公式も複数値を全配信する）。
+ *   ただし defer は additionalContext を無視するため、defer 採用時は付けない
  */
 function combine(outputs: PreToolUseDecision[]): HookResponse {
   if (outputs.length === 0) return {};
 
   const winner = mostRestrictive(outputs);
+
+  // defer は additionalContext を無視するので付与せずそのまま返す
+  if (winner?.permissionDecision === "defer") {
+    return { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "defer" } };
+  }
+
   const contexts = outputs
-    .map((o) => o.additionalContext)
+    .map((o) => ("additionalContext" in o ? o.additionalContext : undefined))
     .filter((c): c is string => c !== undefined);
   const joined = contexts.length > 0 ? contexts.join("\n") : undefined;
 

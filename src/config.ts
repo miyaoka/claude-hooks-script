@@ -108,9 +108,9 @@ function checkBashRule(rule: unknown): string | null {
 /**
  * 公式レスポンスフィールドを公式の制約どおりに検証する。
  * - permissionDecision: allow / deny / ask / defer
- * - permissionDecisionReason: deny / ask で必須、それ以外では不可（公式上 allow / defer では非表示）
- * - additionalContext: 非空文字列
- * - updatedInput: allow のみ、{ command: 非空文字列 }
+ * - permissionDecisionReason: deny / ask で必須、allow で任意、defer / なしでは不可（defer は無視される）
+ * - updatedInput: allow / ask のみ、{ command: 非空文字列 }
+ * - additionalContext: 非空文字列。defer では無視されるため不可
  * - ルールは permissionDecision か additionalContext の少なくとも一方を持つ
  */
 function checkDecisionFields(r: Record<string, unknown>): string | null {
@@ -122,26 +122,26 @@ function checkDecisionFields(r: Record<string, unknown>): string | null {
     return 'permissionDecision must be one of "allow" / "deny" / "ask" / "defer" when present';
   }
 
-  const needsReason = decision === "deny" || decision === "ask";
+  // reason: deny / ask で必須、allow で任意、defer / なしでは不可
+  const reasonAllowed = decision === "allow" || decision === "deny" || decision === "ask";
+  const reasonRequired = decision === "deny" || decision === "ask";
   if (r.permissionDecisionReason !== undefined) {
     if (typeof r.permissionDecisionReason !== "string") {
       return "permissionDecisionReason must be a string";
     }
     if (r.permissionDecisionReason === "") return "permissionDecisionReason must not be empty";
-    if (!needsReason) {
-      return 'permissionDecisionReason is only valid with permissionDecision "deny" or "ask"';
+    if (!reasonAllowed) {
+      return 'permissionDecisionReason is only valid with permissionDecision "allow" / "deny" / "ask"';
     }
-  } else if (needsReason) {
+  } else if (reasonRequired) {
     return `permissionDecision "${decision}" requires permissionDecisionReason`;
   }
 
-  if (r.additionalContext !== undefined) {
-    if (typeof r.additionalContext !== "string") return "additionalContext must be a string";
-    if (r.additionalContext === "") return "additionalContext must not be empty";
-  }
-
+  // updatedInput: allow / ask のみ
   if (r.updatedInput !== undefined) {
-    if (decision !== "allow") return 'updatedInput is only valid with permissionDecision "allow"';
+    if (decision !== "allow" && decision !== "ask") {
+      return 'updatedInput is only valid with permissionDecision "allow" or "ask"';
+    }
     if (
       typeof r.updatedInput !== "object" ||
       r.updatedInput === null ||
@@ -152,6 +152,15 @@ function checkDecisionFields(r: Record<string, unknown>): string | null {
     const command = (r.updatedInput as Record<string, unknown>).command;
     if (typeof command !== "string" || command === "") {
       return "updatedInput.command must be a non-empty string";
+    }
+  }
+
+  // additionalContext: defer では無視されるため不可
+  if (r.additionalContext !== undefined) {
+    if (typeof r.additionalContext !== "string") return "additionalContext must be a string";
+    if (r.additionalContext === "") return "additionalContext must not be empty";
+    if (decision === "defer") {
+      return 'additionalContext is ignored with permissionDecision "defer"';
     }
   }
 

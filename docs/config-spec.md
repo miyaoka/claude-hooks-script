@@ -18,9 +18,9 @@
   - `deny`: ブロック。`permissionDecisionReason` が Claude に表示される
   - `ask`: ユーザーの権限ダイアログにエスカレーション
   - `defer`: 権限判定をせず通常フローに委譲
-- `permissionDecisionReason`: `deny` / `ask` の理由。**この 2 値では必須**。`allow` / `defer` では公式上表示されないため**指定不可**
-- `additionalContext`: モデルへ注入する文脈。`permissionDecision` と独立し、どの decision とも併用でき、単体でも指定できる
-- `updatedInput`: 実行前に Bash の command を差し替える（`{ "command": "..." }`）。`permissionDecision: "allow"` のときのみ指定可
+- `permissionDecisionReason`: `allow` / `ask` はユーザーに、`deny` は Claude に表示される。`deny` / `ask` では**必須**、`allow` では任意、`defer` では無視されるため**指定不可**
+- `additionalContext`: モデルへ注入する文脈。`permissionDecision` と独立し、単体でも併用でもよい。`defer` では無視されるため指定不可
+- `updatedInput`: 実行前にツール入力を**全置換**する（`{ "command": "..." }`。Bash の入力は command のみ）。`permissionDecision: "allow"` または `"ask"` のときのみ指定可
 
 ルールは `permissionDecision` か `additionalContext` の少なくとも一方を持つ必要がある。
 
@@ -105,9 +105,9 @@
 
 単一の公式レスポンスへまとめる。
 
-- `permissionDecision`: 最も制限的なルールを採用し、その `permissionDecisionReason` / `updatedInput` を引き継ぐ
-  - 強さの順序: `deny` > `ask` > `allow` > `defer`（安全側に倒す）
-- `additionalContext`: マッチした全ルールの値を改行で連結して集約（公式も複数値を全配信する）
+- `permissionDecision`: 公式の優先順位で採用し、その `permissionDecisionReason` / `updatedInput` を引き継ぐ
+  - 優先順位: `deny` > `defer` > `ask` > `allow`
+- `additionalContext`: マッチした全ルールの値を改行で連結して集約（公式も複数値を全配信する）。ただし `defer` 採用時は無視されるため付けない
 
 ### 例
 
@@ -156,8 +156,8 @@ PreToolUse 以外の hook イベントや、PreToolUse でも Bash 以外のツ�
 - `command` が string で必ず存在する
 - `args` が定義されていれば string。`command: "*"` は `args` 必須
 - `permissionDecision` が定義されていれば `"allow"` / `"deny"` / `"ask"` / `"defer"`
-- `permissionDecisionReason` は `deny` / `ask` で必須、それ以外では指定不可。空文字列は不可
-- `additionalContext` が定義されていれば非空 string
-- `updatedInput` は `permissionDecision: "allow"` のときのみ、`{ command: 非空 string }` の形
+- `permissionDecisionReason` は `deny` / `ask` で必須、`allow` で任意、`defer` / 未指定では不可。空文字列は不可
+- `additionalContext` が定義されていれば非空 string。`defer` では指定不可
+- `updatedInput` は `permissionDecision: "allow"` / `"ask"` のときのみ、`{ command: 非空 string }` の形
 - ルールは `permissionDecision` か `additionalContext` の少なくとも一方を持つ
 - ルール内のフィールドは上記のみ。`decision` / `reason` / `event` / `tool` / `domain` / `query` 等の未知フィールドが含まれていれば error（旧スキーマがサイレントに無効化される事故を防ぐため）
