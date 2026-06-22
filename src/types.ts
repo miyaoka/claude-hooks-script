@@ -33,9 +33,22 @@ export type HookInput = BaseHookInput & {
   tool_input?: Record<string, unknown>;
 };
 
+/**
+ * PreToolUse の hook 出力本体。
+ * PreToolUse は top-level の decision/reason を使わず hookSpecificOutput で制御する
+ * （decision/reason は UserPromptSubmit / PostToolUse / Stop 等の別イベント用）。
+ * - 許可判定は permissionDecision（公式は allow/deny/ask/defer。本フックは allow/deny のみ使用、省略時は defer 相当）
+ * - permissionDecision を省き additionalContext 単体で返すとブロックせずモデルへ文脈を注入する
+ */
+export type PreToolUseHookOutput = {
+  hookEventName: "PreToolUse";
+  permissionDecision?: "allow" | "deny";
+  permissionDecisionReason?: string;
+  additionalContext?: string;
+};
+
 export type HookResponse = {
-  decision?: "approve" | "block";
-  reason?: string;
+  hookSpecificOutput?: PreToolUseHookOutput;
   continue?: boolean;
   stopReason?: string;
   suppressOutput?: boolean;

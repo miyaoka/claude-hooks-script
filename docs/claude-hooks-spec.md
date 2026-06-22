@@ -188,18 +188,26 @@ hook スクリプトは標準入力から JSON を受け取る：
 
 #### PreToolUse
 
+PreToolUse は top-level の `decision` / `reason` を使わず `hookSpecificOutput` で制御する（top-level decision は PostToolUse / Stop / UserPromptSubmit 等の別イベント用）。
+
 ```ts
 {
-  decision?: "approve" | "block",
-  reason: "判定の理由"
+  hookSpecificOutput?: {
+    hookEventName: "PreToolUse",
+    permissionDecision?: "allow" | "deny" | "ask" | "defer",
+    permissionDecisionReason?: "判定の理由",
+    additionalContext?: "ブロックせずモデルに渡す文脈"
+  }
 }
 ```
 
-- `decision`:
-  - `"approve"`: 権限システムをバイパスしてツール使用を許可
-  - `"block"`: ツール使用をブロック
-  - `undefined`: デフォルトの権限フローを使用
-- `reason`: decision の理由（Claude に表示）
+- `permissionDecision`:
+  - `"allow"`: 権限システムをバイパスしてツール使用を許可
+  - `"deny"`: ツール使用をブロック
+  - `"ask"`: ユーザーに権限ダイアログで確認
+  - `"defer"` / 省略: デフォルトの権限フローを使用
+- `permissionDecisionReason`: permissionDecision の理由（Claude に表示）
+- `additionalContext`: `permissionDecision` を省いて単体で返すと、ブロック・承認のいずれもせずモデルの文脈に注入される（警告用途）
 
 #### PostToolUse
 
