@@ -125,6 +125,15 @@ describe("validateConfig", () => {
       });
     });
 
+    it("空文字列の reason を拒否", () => {
+      expect(validateConfig([{ command: "rm", decision: "deny", reason: "" }])).toBe(false);
+      expect(errorMock).toHaveBeenCalledWith(expect.stringContaining("reason must not be empty"), {
+        command: "rm",
+        decision: "deny",
+        reason: "",
+      });
+    });
+
     it("args が非 string を拒否", () => {
       expect(validateConfig([{ command: "ls", args: 123, reason: "x" }])).toBe(false);
       expect(errorMock).toHaveBeenCalledWith(

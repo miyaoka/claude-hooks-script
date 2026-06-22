@@ -76,6 +76,8 @@ function checkBashRule(rule: unknown): string | null {
 
   if (typeof r.command !== "string") return "command must be a string";
   if (typeof r.reason !== "string") return "reason must be a string";
+  // 空 reason は deny の permissionDecisionReason が空になりブロック理由がモデルに伝わらないため禁止
+  if (r.reason === "") return "reason must not be empty";
   if (r.args !== undefined && typeof r.args !== "string") {
     return "args must be a string when present";
   }
