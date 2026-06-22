@@ -158,6 +158,17 @@ describe("checkBashCommand", () => {
       );
     });
 
+    it("3件以上の additionalContext はコマンド出現順で連結する", () => {
+      const rules: BashRule[] = [
+        { command: "a", additionalContext: "A" },
+        { command: "b", additionalContext: "B" },
+        { command: "c", additionalContext: "C" },
+      ];
+      expect(checkBashCommand(createBashInput("a; b; c"), rules)).toEqual(
+        res({ additionalContext: "A\nB\nC" }),
+      );
+    });
+
     it("additionalContext はマッチした全ルールから集約する", () => {
       const rules: BashRule[] = [
         {
